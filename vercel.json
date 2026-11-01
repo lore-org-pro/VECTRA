@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd backend && npm install",
+  "framework": null,
+  "functions": {
+    "api/chat.js":               { "runtime": "nodejs20.x", "maxDuration": 30 },
+    "api/tts.js":                { "runtime": "nodejs20.x", "maxDuration": 30 },
+    "api/health.js":             { "runtime": "nodejs20.x", "maxDuration": 10 },
+    "api/providers.js":          { "runtime": "nodejs20.x", "maxDuration": 10 },
+    "api/demo/questions.js":     { "runtime": "nodejs20.x", "maxDuration": 10 },
+    "api/supabase/status.js":    { "runtime": "nodejs20.x", "maxDuration": 10 }
+  },
+  "routes": [
+    {
+      "src": "/api/health",
+      "dest": "/api/health.js"
+    },
+    {
+      "src": "/api/chat",
+      "dest": "/api/chat.js"
+    },
+    {
+      "src": "/api/tts",
+      "dest": "/api/tts.js"
+    },
+    {
+      "src": "/api/providers/(.*)",
+      "dest": "/api/providers.js"
+    },
+    {
+      "src": "/api/providers",
+      "dest": "/api/providers.js"
+    },
+    {
+      "src": "/api/demo/questions",
+      "dest": "/api/demo/questions.js"
+    },
+    {
+      "src": "/api/supabase/status",
+      "dest": "/api/supabase/status.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Permissions-Policy", "value": "microphone=*" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "unsafe-none" }
+      ]
+    }
+  ]
+}
