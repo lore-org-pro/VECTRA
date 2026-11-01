@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.log
+*.mp3
+backend/cache/audio/*.mp3
+backend/cache/responses/*.json
+screen_*.png
+.DS_Store
+Thumbs.db

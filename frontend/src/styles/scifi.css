@@ -1,0 +1,282 @@
+@import "tailwindcss";
+
+/* ========================================================
+   VECTRA // SCI-FI HUD STYLING SYSTEM
+   ======================================================== */
+
+:root {
+  /* Tema Cian por defecto */
+  --primary: #00f0ff;
+  --primary-glow: rgba(0, 240, 255, 0.45);
+  --primary-dark: #004b57;
+  --secondary: #0077ff;
+  --accent: #ff0077;
+  --bg-deep: #03080e;
+  --bg-panel: rgba(5, 16, 26, 0.75);
+  --bg-panel-border: rgba(0, 240, 255, 0.25);
+  --text-main: #e0f7ff;
+  --text-muted: #5a8a9e;
+  --success: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff3344;
+}
+
+[data-theme="blue"] {
+  --primary: #2d82ff;
+  --primary-glow: rgba(45, 130, 255, 0.45);
+  --primary-dark: #0f2d5c;
+  --secondary: #00e1ff;
+  --accent: #d000ff;
+  --bg-deep: #030612;
+  --bg-panel: rgba(6, 12, 28, 0.75);
+  --bg-panel-border: rgba(45, 130, 255, 0.25);
+  --text-main: #e4efff;
+  --text-muted: #647b9e;
+}
+
+[data-theme="green"] {
+  --primary: #00ff73;
+  --primary-glow: rgba(0, 255, 115, 0.45);
+  --primary-dark: #004720;
+  --secondary: #00c853;
+  --accent: #ffee00;
+  --bg-deep: #020b05;
+  --bg-panel: rgba(4, 20, 10, 0.75);
+  --bg-panel-border: rgba(0, 255, 115, 0.25);
+  --text-main: #e5ffe8;
+  --text-muted: #5e8f69;
+}
+
+[data-theme="amber"] {
+  --primary: #ffaa00;
+  --primary-glow: rgba(255, 170, 0, 0.45);
+  --primary-dark: #573a00;
+  --secondary: #ff5500;
+  --accent: #00f0ff;
+  --bg-deep: #0e0802;
+  --bg-panel: rgba(24, 14, 4, 0.75);
+  --bg-panel-border: rgba(255, 170, 0, 0.25);
+  --text-main: #fff4e0;
+  --text-muted: #9e7f5a;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    user-select: none;
+  }
+
+  body {
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Chakra Petch', -apple-system, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+}
+
+@layer components {
+  /* 16:9 Screen Layout Containers */
+  .vectra-app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background-color: #000;
+  }
+
+.vectra-main-grid {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  gap: 8px;
+  padding: 8px;
+  position: relative;
+}
+
+.vectra-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vectra-header {
+  height: 56px;
+  min-height: 56px;
+  border-bottom: 1px solid var(--bg-panel-border);
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  padding: 0 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 20;
+}
+
+.vectra-subtitle-bar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--bg-panel-border);
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  z-index: 10;
+}
+
+.vectra-control-bar {
+  height: 56px;
+  min-height: 56px;
+  border-top: 1px solid var(--bg-panel-border);
+  background: var(--bg-panel);
+  padding: 0 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 20;
+}
+
+/* Tipografía de títulos y códigos */
+.font-orbitron {
+  font-family: 'Orbitron', monospace;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Efecto Scanlines CRT opcional */
+.scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Panel HUD con bordes sci-fi y blur */
+.hud-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--bg-panel-border);
+  backdrop-filter: blur(8px);
+  position: relative;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hud-panel:hover {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 20px var(--primary-glow), 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+/* Esquinas decorativas Sci-Fi */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--primary);
+  pointer-events: none;
+}
+.corner-tl { top: -1px; left: -1px; border-top: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+.corner-tr { top: -1px; right: -1px; border-top: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+.corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+.corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+
+/* Glows y sombras neón */
+.glow-primary {
+  text-shadow: 0 0 8px var(--primary-glow), 0 0 16px var(--primary);
+}
+
+.glow-box {
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* Botones estilo HUD */
+.hud-btn {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid var(--bg-panel-border);
+  color: var(--text-main);
+  font-family: 'Chakra Petch', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.hud-btn:hover {
+  background: var(--primary);
+  color: #000;
+  box-shadow: 0 0 15px var(--primary-glow);
+  border-color: var(--primary);
+}
+
+.hud-btn-active {
+  background: var(--primary);
+  color: #000;
+  box-shadow: 0 0 12px var(--primary-glow);
+  font-weight: 700;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-dark);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Animaciones */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s infinite ease-in-out;
+}
+
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar {
+  animation: radar-sweep 4s linear infinite;
+}
+}

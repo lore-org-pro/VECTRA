@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10111a">
+  <title>Nova — Tu asistente IA</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">✳</div><span>nova</span></div>
+      <button class="new-chat" id="new-chat"><span>＋</span> Nueva conversación</button>
+      <div class="side-label">TU ESPACIO</div>
+      <div class="side-note"><span class="status-dot"></span><span id="connection-status">Comprobando motor…</span></div>
+      <div class="sidebar-bottom">
+        <div class="avatar">N</div>
+        <div><strong>Nova AI</strong><small>Asistente personal</small></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="Abrir menú">☰</button>
+        <div class="model-label"><span class="sparkle">✳</span> Nova <span class="model-tag">IA</span></div>
+        <button class="clear-button" id="clear-chat" title="Borrar conversación">Borrar chat</button>
+      </header>
+      <section class="conversation" id="conversation" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <div class="welcome-orb">✳</div>
+          <p class="eyebrow">TU ASISTENTE INTELIGENTE</p>
+          <h1>Hola, ¿qué vamos a<br><span>crear hoy?</span></h1>
+          <p class="welcome-subtitle">Pregunta, aprende, programa o convierte una idea en algo real.</p>
+          <div class="suggestions">
+            <button class="suggestion" data-prompt="Enséñame a crear una página web desde cero."><span>⌘</span><strong>Aprender programación</strong><small>Empieza paso a paso</small></button>
+            <button class="suggestion" data-prompt="Dame tres ideas originales para una aplicación con inteligencia artificial."><span>✧</span><strong>Explorar ideas</strong><small>Convierte una idea en proyecto</small></button>
+            <button class="suggestion" data-prompt="Explícame cómo funciona una inteligencia artificial como si fuera principiante."><span>◉</span><strong>Entender la IA</strong><small>Conceptos sin complicaciones</small></button>
+          </div>
+        </div>
+        <div class="messages" id="messages"></div>
+      </section>
+      <footer class="composer-area">
+        <form class="composer" id="chat-form">
+          <textarea id="prompt" rows="1" maxlength="8000" placeholder="Escribe tu pregunta a Nova…" aria-label="Escribe tu mensaje"></textarea>
+          <div class="composer-bottom"><span class="hint">Nova puede cometer errores. Verifica la información importante.</span><button class="send-button" id="send-button" type="submit" aria-label="Enviar mensaje"><span>↑</span></button></div>
+        </form>
+        <p class="footer-caption">Creada con tu interfaz y el motor de OpenAI</p>
+      </footer>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

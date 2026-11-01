@@ -1,0 +1,62 @@
+[
+  {
+    "id": "learn-gemini-4-argon-carbon",
+    "concepto": "Google Gemini 4 Argon & Carbon",
+    "hecho": "El último y más avanzado modelo insignia de Google es Gemini 4 Argon para razonamiento extremo y multimodalidad, acompañado de Gemini 4 Carbon para despliegues ultraeficientes de alto rendimiento, situándose en la cúspide de la IA de Google en 2026.",
+    "categoria": "Conocimiento Aprendido del Usuario",
+    "fecha": "2026-10-29",
+    "fechaTexto": "Octubre de 2026",
+    "origenUsuario": true
+  },
+  {
+    "id": "learn-1793248148313-kxtw",
+    "concepto": "mi comida favorita son los",
+    "hecho": "mi comida favorita son los tacos de birria con queso",
+    "categoria": "Conocimiento Aprendido del Usuario",
+    "fecha": "2026-10-29",
+    "fechaTexto": "Octubre de 2026",
+    "origenUsuario": true
+  },
+  {
+    "id": "ai-gemini-2026",
+    "concepto": "Google Gemini",
+    "hecho": "A fecha de octubre de 2026, la generación más avanzada de Google es la familia Gemini 2.0 (Gemini 2.0 Flash, Gemini 2.0 Flash Thinking con razonamiento en vivo, y Gemini 2.0 Pro Experimental). Cuentan con soporte multimodal en tiempo real nativo (Live API) y la integración de Project Astra.",
+    "categoria": "Inteligencia Artificial",
+    "fecha": "2026-10-01"
+  },
+  {
+    "id": "ai-openai-2026",
+    "concepto": "OpenAI",
+    "hecho": "OpenAI cuenta en 2026 con su serie de razonamiento o1 y o3 (o3-mini), el modelo multimodal insignia GPT-4o y sus agentes autónomos Operator para tareas web.",
+    "categoria": "Inteligencia Artificial",
+    "fecha": "2026-10-01"
+  },
+  {
+    "id": "ai-anthropic-2026",
+    "concepto": "Anthropic Claude",
+    "hecho": "Anthropic dispone de Claude 3.5 Sonnet, Claude 3.5 Haiku y Claude 3.7 Sonnet con razonamiento híbrido y capacidades de control de interfaz de usuario (Computer Use).",
+    "categoria": "Inteligencia Artificial",
+    "fecha": "2026-10-01"
+  },
+  {
+    "id": "ai-deepseek-2026",
+    "concepto": "DeepSeek",
+    "hecho": "DeepSeek revolucionó el panorama con DeepSeek-V3 y DeepSeek-R1, modelos de código abierto con razonamiento por aprendizaje por refuerzo puro (RL) y arquitectura MoE ultraeficiente.",
+    "categoria": "Inteligencia Artificial",
+    "fecha": "2026-10-01"
+  },
+  {
+    "id": "science-quantum-willow",
+    "concepto": "Computación Cuántica Willow",
+    "hecho": "Google Quantum AI anunció el chip Willow, logrando reducir exponencialmente los errores cuánticos conforme se escala el número de qubits físicos, superando el umbral crítico de corrección de errores.",
+    "categoria": "Física y Computación",
+    "fecha": "2026-10-01"
+  },
+  {
+    "id": "science-alphafold3",
+    "concepto": "AlphaFold 3 y AlphaGenome",
+    "hecho": "Google DeepMind presentó AlphaFold 3, capaz de predecir la estructura no solo de proteínas sino de complejos con ADN, ARN y moléculas farmacológicas, y AlphaGenome para decodificar variantes genómicas no codificantes.",
+    "categoria": "Biotecnología",
+    "fecha": "2026-10-01"
+  }
+]
