@@ -75,93 +75,93 @@ function parseCoordinates(vec) {
 // ══════════════════════════════════════════════
 
 // 1. Badge Holográfico Elegante para Vectores (Nombre + Coordenadas + Magnitud)
-// DPI 2x: canvas 1280×280 rendered a 640×140 lógicos → texto perfectamente nítido
+// DPI 2x: canvas reducido a 560×90 lógicos para badges más compactos y claros
 function createVectorBadgeSprite({ name, coords, mag, colorHex = '#00f5ff', isResult = false }) {
   const DPI = 2;
-  const W = 640, H = 140;
+  const W = 560, H = 90;
   const canvas = document.createElement('canvas');
   canvas.width = W * DPI;
   canvas.height = H * DPI;
   const ctx = canvas.getContext('2d');
   ctx.scale(DPI, DPI);
 
-  // Sombra exterior difuminada del contenedor completo
+  // Fondo semi-transparente más limpio
   ctx.shadowColor = colorHex;
-  ctx.shadowBlur = isResult ? 28 : 16;
-  ctx.fillStyle = isResult ? 'rgba(6, 28, 20, 0.97)' : 'rgba(4, 12, 30, 0.97)';
+  ctx.shadowBlur = isResult ? 18 : 10;
+  ctx.fillStyle = isResult ? 'rgba(6, 28, 20, 0.88)' : 'rgba(4, 12, 30, 0.85)';
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(5, 5, W - 10, H - 10, 22);
-  else ctx.rect(5, 5, W - 10, H - 10);
+  if (ctx.roundRect) ctx.roundRect(4, 4, W - 8, H - 8, 16);
+  else ctx.rect(4, 4, W - 8, H - 8);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Borde neón brillante con doble línea (exterior tenue + interior nítido)
-  ctx.strokeStyle = colorHex + '55';
-  ctx.lineWidth = 7;
+  // Borde neón — más delgado y limpio
+  ctx.strokeStyle = colorHex + '44';
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(5, 5, W - 10, H - 10, 22);
+  if (ctx.roundRect) ctx.roundRect(4, 4, W - 8, H - 8, 16);
   ctx.stroke();
   ctx.strokeStyle = colorHex;
-  ctx.lineWidth = isResult ? 3.5 : 2.5;
+  ctx.lineWidth = isResult ? 2.5 : 1.8;
   ctx.stroke();
 
-  // Franja lateral de color para identificación rápida
+  // Franja lateral de color
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, colorHex + 'cc');
-  grad.addColorStop(1, colorHex + '33');
+  grad.addColorStop(0, colorHex + 'bb');
+  grad.addColorStop(1, colorHex + '22');
   ctx.fillStyle = grad;
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(5, 5, 10, H - 10, [22, 0, 0, 22]);
+  if (ctx.roundRect) ctx.roundRect(4, 4, 8, H - 8, [16, 0, 0, 16]);
   ctx.fill();
 
-  // Punto indicador de color centrado
-  ctx.shadowColor = colorHex;
-  ctx.shadowBlur = 14;
-  ctx.fillStyle = colorHex;
-  ctx.beginPath();
-  ctx.arc(40, H / 2, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Nombre del vector con ligero glow
+  // Punto indicador de color
   ctx.shadowColor = colorHex;
   ctx.shadowBlur = 10;
-  ctx.font = 'bold 46px "JetBrains Mono", monospace, sans-serif';
+  ctx.fillStyle = colorHex;
+  ctx.beginPath();
+  ctx.arc(30, H / 2, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Nombre del vector
+  ctx.shadowColor = colorHex;
+  ctx.shadowBlur = 8;
+  ctx.font = 'bold 34px "JetBrains Mono", monospace, sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = colorHex;
-  ctx.fillText(`→${name}`, 68, H / 2);
+  ctx.fillText(`→${name}`, 50, H / 2);
   ctx.shadowBlur = 0;
 
   // Separador vertical
-  ctx.strokeStyle = 'rgba(148,163,184,0.3)';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(160, 22); ctx.lineTo(160, H - 22);
+  ctx.moveTo(115, 14); ctx.lineTo(115, H - 14);
   ctx.stroke();
 
   // Coordenadas
   const coordText = `(${coords.map(c => Number.isInteger(c) ? c : c.toFixed(2)).join(', ')})`;
-  ctx.font = '600 36px "JetBrains Mono", monospace, sans-serif';
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fillText(coordText, 174, H / 2);
+  ctx.font = '600 28px "JetBrains Mono", monospace, sans-serif';
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillText(coordText, 126, H / 2);
 
-  // Pill de magnitud pegado a la derecha
+  // Pill de magnitud a la derecha
   const magText = `‖v‖ ${mag}`;
-  ctx.font = 'bold 28px "JetBrains Mono", monospace, sans-serif';
-  const magW = ctx.measureText(magText).width + 24;
-  const magX = W - magW - 10;
+  ctx.font = 'bold 22px "JetBrains Mono", monospace, sans-serif';
+  const magW = ctx.measureText(magText).width + 18;
+  const magX = W - magW - 8;
   const magY = H / 2;
 
-  ctx.fillStyle = isResult ? 'rgba(16,185,129,0.30)' : 'rgba(0,245,255,0.18)';
+  ctx.fillStyle = isResult ? 'rgba(16,185,129,0.25)' : 'rgba(0,245,255,0.14)';
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(magX, magY - 22, magW, 44, 12);
+  if (ctx.roundRect) ctx.roundRect(magX, magY - 16, magW, 32, 9);
   ctx.fill();
   ctx.strokeStyle = isResult ? '#10b981' : colorHex;
-  ctx.lineWidth = 1.8;
+  ctx.lineWidth = 1.4;
   ctx.stroke();
   ctx.fillStyle = isResult ? '#6ee7b7' : '#bae6fd';
   ctx.textAlign = 'center';
@@ -258,76 +258,47 @@ function createAxisBadgeSprite(axisName, colorHex) {
 
 
 // ══════════════════════════════════════════════
-// Vector 3D de Alta Fidelidad Holográfica
+// Vector 3D de Alta Fidelidad Holográfica y Elegante
 // ══════════════════════════════════════════════
-function createVector3DMesh(start, end, hexColor, radius = 0.16, headRadius = 0.42, headHeight = 0.85, isResult = false) {
+function createVector3DMesh(start, end, hexColor, radius = 0.14, headRadius = 0.36, headHeight = 0.75, isResult = false) {
   const group = new THREE.Group();
   const dir = new THREE.Vector3().subVectors(end, start);
   const length = dir.length();
   if (length < 0.001) return group;
 
-  const actualRadius = isResult ? radius * 1.25 : radius;
-  const actualHeadR = isResult ? headRadius * 1.25 : headRadius;
-  const actualHeadH = isResult ? headHeight * 1.2 : headHeight;
+  const actualRadius = isResult ? radius * 1.15 : radius;
+  const actualHeadR = isResult ? headRadius * 1.15 : headRadius;
+  const actualHeadH = isResult ? headHeight * 1.1 : headHeight;
   const shaftLength = Math.max(0.02, length - actualHeadH);
 
-  // Material metálico-emisivo con brillo intenso
+  // Material metálico-emisivo estilizado, limpio sin saturación quemada
   const mat = new THREE.MeshStandardMaterial({
     color: hexColor,
-    roughness: 0.12,
-    metalness: 0.8,
+    roughness: 0.2,
+    metalness: 0.6,
     emissive: hexColor,
-    emissiveIntensity: isResult ? 1.4 : 0.95
+    emissiveIntensity: isResult ? 0.75 : 0.5
   });
 
-  // 1. Tubo del vector
-  const shaftGeo = new THREE.CylinderGeometry(actualRadius, actualRadius, shaftLength, 28);
+  // 1. Tubo liso y elegante del vector (sin anillos tipo oruga)
+  const shaftGeo = new THREE.CylinderGeometry(actualRadius, actualRadius, shaftLength, 32);
   shaftGeo.translate(0, shaftLength / 2, 0);
   const shaftMesh = new THREE.Mesh(shaftGeo, mat);
   group.add(shaftMesh);
 
-  // Anillos de bobina de energía a lo largo del tubo (estilo repulsor / sci-fi)
-  if (shaftLength > 1.2) {
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 });
-    [0.25, 0.5, 0.75].forEach((pct) => {
-      const coilGeo = new THREE.TorusGeometry(actualRadius * 1.15, actualRadius * 0.15, 8, 24);
-      coilGeo.rotateX(Math.PI / 2);
-      const coil = new THREE.Mesh(coilGeo, ringMat);
-      coil.position.y = shaftLength * pct;
-      group.add(coil);
-    });
-  }
-
-  // 2. Cono de la punta
+  // 2. Cono aerodinámico y afilado en la punta
   const headGeo = new THREE.ConeGeometry(actualHeadR, actualHeadH, 32);
   headGeo.translate(0, actualHeadH / 2, 0);
   const headMesh = new THREE.Mesh(headGeo, mat);
   headMesh.position.y = shaftLength;
   group.add(headMesh);
 
-  // 3. Orbe de energía brillante en la cúspide
-  const tipGeo = new THREE.SphereGeometry(actualRadius * 1.8, 20, 20);
-  const tipMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+  // 3. Puntero sutil en la cúspide (delicado y nítido)
+  const tipGeo = new THREE.SphereGeometry(actualRadius * 0.75, 16, 16);
+  const tipMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 });
   const tipMesh = new THREE.Mesh(tipGeo, tipMat);
   tipMesh.position.y = length;
   group.add(tipMesh);
-
-  // Corona de pulso en la punta para el vector resultante
-  if (isResult) {
-    const coronaGeo = new THREE.RingGeometry(actualRadius * 1.8, actualRadius * 3.8, 24);
-    const coronaMat = new THREE.MeshBasicMaterial({ color: hexColor, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
-    const corona = new THREE.Mesh(coronaGeo, coronaMat);
-    corona.rotation.x = -Math.PI / 2;
-    corona.position.y = length;
-    group.add(corona);
-  }
-
-  // 4. Anillo de energía en la base
-  const ringGeo = new THREE.RingGeometry(actualRadius * 1.1, actualRadius * 3.0, 28);
-  const ringMat = new THREE.MeshBasicMaterial({ color: hexColor, side: THREE.DoubleSide, transparent: true, opacity: 0.55 });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = -Math.PI / 2;
-  group.add(ring);
 
   // Orientar hacia la dirección del vector
   group.position.copy(start);
@@ -451,19 +422,19 @@ export default function VectorScene({
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(width, height),
-      0.85,  // fuerza de resplandor neón
-      0.45,  // radio de dispersión volumétrica
-      0.72   // umbral de luminosidad para destellos
+      0.35,  // resplandor sutil y limpio (sin cegar ni quemar)
+      0.25,  // radio de dispersión controlado
+      0.82   // umbral para que solo los elementos luminosos brillen
     );
     composer.addPass(bloomPass);
 
     // Luces
-    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.4);
     mainLight.position.set(12, 18, 14);
     scene.add(mainLight);
 
-    const blueLight = new THREE.DirectionalLight(0x00f5ff, 1.0);
+    const blueLight = new THREE.DirectionalLight(0x00f5ff, 0.7);
     blueLight.position.set(-10, -6, -8);
     scene.add(blueLight);
 
@@ -481,18 +452,18 @@ export default function VectorScene({
     const axesGroup = new THREE.Group();
     scene.add(axesGroup);
 
-    // Esfera emisiva del Origen
-    const originGeo = new THREE.SphereGeometry(0.18, 24, 24);
+    // Esfera emisiva del Origen — pequeña y elegante
+    const originGeo = new THREE.SphereGeometry(0.12, 24, 24);
     const originMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0x00f5ff,
-      emissiveIntensity: 1.5,
-      roughness: 0.1
+      emissiveIntensity: 0.8,
+      roughness: 0.2
     });
     const originMesh = new THREE.Mesh(originGeo, originMat);
     scene.add(originMesh);
 
-    const originLight = new THREE.PointLight(0x00f5ff, 2.5, 12);
+    const originLight = new THREE.PointLight(0x00f5ff, 1.2, 8);
     scene.add(originLight);
 
     // Grupo de vectores dinámicos
@@ -585,10 +556,10 @@ export default function VectorScene({
         updateCamera();
       }
 
-      // Pulso del origen
-      const pulse = 1.0 + Math.sin(elapsed * 2.5) * 0.12;
+      // Pulso sutil del origen
+      const pulse = 1.0 + Math.sin(elapsed * 2.0) * 0.08;
       originMesh.scale.setScalar(pulse);
-      originLight.intensity = 2.0 + Math.sin(elapsed * 3.0) * 0.8;
+      originLight.intensity = 1.0 + Math.sin(elapsed * 2.5) * 0.3;
 
       starsGroup.rotation.y += 0.00015;
       gridGroup.rotation.y += 0.0005;
@@ -719,8 +690,8 @@ export default function VectorScene({
     const lightDist = Math.max(8.0, maxMag * 1.4);
 
     // Dimensiones compactas y ultra-nítidas para los badges
-    const badgeW = Math.max(2.4, Math.min(4.2, maxMag * 0.18));
-    const badgeH = badgeW * (140 / 640);
+    const badgeW = Math.max(2.0, Math.min(3.4, maxMag * 0.14));
+    const badgeH = badgeW * (90 / 560);
 
     inputVectors.forEach((rawVec, idx) => {
       const coords = parseCoordinates(rawVec);
@@ -761,48 +732,44 @@ export default function VectorScene({
       });
       badge.scale.set(badgeW, badgeH, 1);
 
-      // Posición: en la punta + extensión hacia afuera según dirección del vector
-      // Escalonado por índice para evitar solapamiento incluso en vectores similares
+      // Posición: más allá de la punta, escalonada para que no colisione con el cono ni con otros badges
       const dirNorm = tip.length() > 0.001 ? tip.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
-      // Offset lateral perpendicular al eje Y mundial para escalonar si varios comparten dirección
       const perpOffset = new THREE.Vector3(
-        Math.cos(idx * 2.4 + 0.8),   // ángulo uniforme en XZ
+        Math.cos(idx * 2.4 + 0.8),
         0,
         Math.sin(idx * 2.4 + 0.8)
-      ).multiplyScalar(badgeH * (0.6 + idx * 0.35));
+      ).multiplyScalar(badgeH * (0.8 + idx * 0.4));
 
-      // Offset primario: dirección del vector extendida más allá de la punta
-      const primaryOffset = dirNorm.clone().multiplyScalar(headH * 1.2 + badgeH * 0.7);
+      const primaryOffset = dirNorm.clone().multiplyScalar(headH * 1.5 + badgeH * 1.0);
 
-      // Índice de elevación: alterna arriba/abajo según paridad para separar
       const elevSign = (idx % 2 === 0) ? 1 : -1;
-      const elevOffset = new THREE.Vector3(0, elevSign * badgeH * 0.9 * (1 + idx * 0.3), 0);
+      const elevOffset = new THREE.Vector3(0, elevSign * badgeH * 0.7 * (1 + idx * 0.25), 0);
 
       const badgePos = tip.clone().add(primaryOffset).add(perpOffset).add(elevOffset);
       badge.position.copy(badgePos);
       dynamicGroup.add(badge);
 
-      // Línea líder fina: conecta el badge con la punta del vector
+      // Línea líder sutil y nítida
       const leaderGeo = new THREE.BufferGeometry().setFromPoints([tip, badgePos]);
       const leaderMat = new THREE.LineDashedMaterial({
         color: colorNum,
         dashSize: Math.max(0.1, headH * 0.2),
         gapSize: Math.max(0.06, headH * 0.12),
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.35,
         linewidth: 1
       });
       const leaderLine = new THREE.Line(leaderGeo, leaderMat);
       leaderLine.computeLineDistances();
       dynamicGroup.add(leaderLine);
 
-      // 3. Luz puntual en la cabeza del vector
-      const light = new THREE.PointLight(colorNum, isResult ? 3.0 : 2.2, lightDist);
+      // 3. Luz puntual suave en la punta
+      const light = new THREE.PointLight(colorNum, isResult ? 1.4 : 0.8, lightDist * 0.8);
       light.position.set(x, y, z);
       dynamicGroup.add(light);
 
-      // 4. Proyección Geométrica al Suelo: Retícula Sonar Elegante (Sin texto invasivo)
+      // 4. Proyección Geométrica al Suelo: Retícula Sonar Discreta
       const floorPoint = new THREE.Vector3(x, 0, z);
 
       // Línea vertical discontinua de caída al plano XZ
@@ -811,7 +778,7 @@ export default function VectorScene({
         dashSize: Math.max(0.2, maxMag * 0.02),
         gapSize: Math.max(0.12, maxMag * 0.012),
         transparent: true,
-        opacity: 0.65
+        opacity: 0.4
       });
       const dropGeo = new THREE.BufferGeometry().setFromPoints([tip, floorPoint]);
       const dropLine = new THREE.Line(dropGeo, dropDashMat);
@@ -819,9 +786,9 @@ export default function VectorScene({
       projectionGroup.add(dropLine);
 
       // Retícula circular en el suelo
-      const sonarR = Math.max(0.35, shaftR * 2.4);
+      const sonarR = Math.max(0.3, shaftR * 2.0);
       const innerDiscGeo = new THREE.CircleGeometry(sonarR, 20);
-      const innerDiscMat = new THREE.MeshBasicMaterial({ color: colorNum, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+      const innerDiscMat = new THREE.MeshBasicMaterial({ color: colorNum, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
       const innerDisc = new THREE.Mesh(innerDiscGeo, innerDiscMat);
       innerDisc.rotation.x = -Math.PI / 2;
       innerDisc.position.copy(floorPoint);
@@ -832,13 +799,13 @@ export default function VectorScene({
     // ── Construcción Dinámica de Rejilla y Ejes Cartesianos ──
     const gridSize = Math.max(20, Math.ceil((maxMag * 2.6) / 10) * 10);
     const gridDivs = Math.max(20, Math.min(50, Math.round(gridSize / (maxMag > 30 ? 5 : 2))));
-    const gridGround = new THREE.GridHelper(gridSize, gridDivs, 0x00e5ff, 0x0f2744);
+    const gridGround = new THREE.GridHelper(gridSize, gridDivs, 0x00bcd4, 0x071b2d);
     gridGroup.add(gridGround);
 
     const discR1 = Math.max(1.5, maxMag * 0.08);
     const discR2 = Math.max(8, maxMag * 0.65);
     const discGeo = new THREE.RingGeometry(discR1, discR2, 48);
-    const discMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, side: THREE.DoubleSide, transparent: true, opacity: 0.05 });
+    const discMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, side: THREE.DoubleSide, transparent: true, opacity: 0.02 });
     const disc = new THREE.Mesh(discGeo, discMat);
     disc.rotation.x = -Math.PI / 2;
     gridGroup.add(disc);
@@ -935,7 +902,7 @@ export default function VectorScene({
           color: 0x00f5ff,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.12
+          opacity: 0.05
         })
       );
       dynamicGroup.add(planeMesh);
@@ -965,48 +932,50 @@ export default function VectorScene({
         const arcPoints = [];
         const normU = u.clone().normalize();
         const normV = v.clone().normalize();
-        const steps = 30;
+        // Solo renderizar arco 3D si el ángulo es visualmente discernible (evita artefactos colapsados en vectores casi paralelos)
+        if (angleDeg >= 4.0 && angleDeg <= 176.0) {
+          const steps = 30;
+          for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const interp = new THREE.Vector3().lerpVectors(normU, normV, t).normalize().multiplyScalar(arcRadius);
+            arcPoints.push(interp);
+          }
 
-        for (let i = 0; i <= steps; i++) {
-          const t = i / steps;
-          const interp = new THREE.Vector3().lerpVectors(normU, normV, t).normalize().multiplyScalar(arcRadius);
-          arcPoints.push(interp);
+          // 1. Sector translúcido dorado suave y discreto
+          const fanVerts = [];
+          for (let i = 0; i < arcPoints.length - 1; i++) {
+            fanVerts.push(0, 0, 0);
+            fanVerts.push(arcPoints[i].x, arcPoints[i].y, arcPoints[i].z);
+            fanVerts.push(arcPoints[i + 1].x, arcPoints[i + 1].y, arcPoints[i + 1].z);
+          }
+          const fanGeo = new THREE.BufferGeometry();
+          fanGeo.setAttribute('position', new THREE.Float32BufferAttribute(fanVerts, 3));
+          fanGeo.computeVertexNormals();
+          const fanMesh = new THREE.Mesh(
+            fanGeo,
+            new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.12 })
+          );
+          dynamicGroup.add(fanMesh);
+
+          // 2. Curva dorada nítida y fina
+          const arcCurve = new THREE.CatmullRomCurve3(arcPoints);
+          const tubeGeo = new THREE.TubeGeometry(arcCurve, 28, Math.max(0.025, maxMag * 0.003), 10, false);
+          const tubeMat = new THREE.MeshStandardMaterial({
+            color: 0xfacc15,
+            emissive: 0xfacc15,
+            emissiveIntensity: 0.6,
+            roughness: 0.3
+          });
+          dynamicGroup.add(new THREE.Mesh(tubeGeo, tubeMat));
+
+          // 3. Badge Compacto del Ángulo θ
+          const angleBadge = createAngleBadgeSprite(angleDeg);
+          const angleBadgeW = Math.max(1.6, Math.min(2.6, maxMag * 0.12));
+          angleBadge.scale.set(angleBadgeW, angleBadgeW * (110 / 360), 1);
+          const midArc = new THREE.Vector3().lerpVectors(normU, normV, 0.5).normalize().multiplyScalar(arcRadius + angleBadgeW * 0.45);
+          angleBadge.position.copy(midArc);
+          dynamicGroup.add(angleBadge);
         }
-
-        // 1. Sector translúcido dorado suave
-        const fanVerts = [];
-        for (let i = 0; i < arcPoints.length - 1; i++) {
-          fanVerts.push(0, 0, 0);
-          fanVerts.push(arcPoints[i].x, arcPoints[i].y, arcPoints[i].z);
-          fanVerts.push(arcPoints[i + 1].x, arcPoints[i + 1].y, arcPoints[i + 1].z);
-        }
-        const fanGeo = new THREE.BufferGeometry();
-        fanGeo.setAttribute('position', new THREE.Float32BufferAttribute(fanVerts, 3));
-        fanGeo.computeVertexNormals();
-        const fanMesh = new THREE.Mesh(
-          fanGeo,
-          new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.22 })
-        );
-        dynamicGroup.add(fanMesh);
-
-        // 2. Curva dorada nítida
-        const arcCurve = new THREE.CatmullRomCurve3(arcPoints);
-        const tubeGeo = new THREE.TubeGeometry(arcCurve, 28, Math.max(0.035, maxMag * 0.004), 10, false);
-        const tubeMat = new THREE.MeshStandardMaterial({
-          color: 0xfacc15,
-          emissive: 0xfacc15,
-          emissiveIntensity: 1.1,
-          roughness: 0.2
-        });
-        dynamicGroup.add(new THREE.Mesh(tubeGeo, tubeMat));
-
-        // 3. Badge Compacto del Ángulo θ
-        const angleBadge = createAngleBadgeSprite(angleDeg);
-        const angleBadgeW = Math.max(1.8, Math.min(3.0, maxMag * 0.14));
-        angleBadge.scale.set(angleBadgeW, angleBadgeW * (110 / 360), 1);
-        const midArc = new THREE.Vector3().lerpVectors(normU, normV, 0.5).normalize().multiplyScalar(arcRadius + angleBadgeW * 0.45);
-        angleBadge.position.copy(midArc);
-        dynamicGroup.add(angleBadge);
       }
     }
 
