@@ -130,10 +130,34 @@ export class AudioPlayerService {
         source.buffer = audioBuffer;
         source.playbackRate.value = this.rate;
 
+        // CADENA DSP CINEMATOGRÁFICA TIPO JARVIS (Ecualizador + Calidez + Compresor de Broadcast)
+        const bassWarmth = this.audioCtx.createBiquadFilter();
+        bassWarmth.type = 'peaking';
+        bassWarmth.frequency.value = 190; // Resonancia pectoral cálida
+        bassWarmth.Q.value = 1.2;
+        bassWarmth.gain.value = 4.0; // +4 dB de presencia profunda
+
+        const voiceClarity = this.audioCtx.createBiquadFilter();
+        voiceClarity.type = 'peaking';
+        voiceClarity.frequency.value = 2800; // Articulación fonética y claridad matemática
+        voiceClarity.Q.value = 1.0;
+        voiceClarity.gain.value = 2.2;
+
+        const compressor = this.audioCtx.createDynamicsCompressor();
+        compressor.threshold.value = -22; // Nivel de corte
+        compressor.knee.value = 6;
+        compressor.ratio.value = 4;
+        compressor.attack.value = 0.004; // Respuesta ultra rápida
+        compressor.release.value = 0.18;
+
         const gainNode = this.audioCtx.createGain();
         gainNode.gain.value = this.volume;
 
-        source.connect(this.analyser);
+        // Conectar la cadena analítica completa
+        source.connect(bassWarmth);
+        bassWarmth.connect(voiceClarity);
+        voiceClarity.connect(compressor);
+        compressor.connect(this.analyser);
         this.analyser.connect(gainNode);
         gainNode.connect(this.audioCtx.destination);
 
@@ -382,6 +406,16 @@ export class AudioPlayerService {
     }
     if (this.onViseme) this.onViseme('closed');
     if (this.onAudioLevel) this.onAudioLevel(0);
+  }
+
+  /**
+   * Obtiene datos de frecuencia espectral en tiempo real para visualizadores holográficos
+   */
+  getFrequencyData(binCount = 32) {
+    if (!this.analyser) return new Uint8Array(binCount);
+    const data = new Uint8Array(this.analyser.frequencyBinCount);
+    this.analyser.getByteFrequencyData(data);
+    return data.slice(0, binCount);
   }
 }
 

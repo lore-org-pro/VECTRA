@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RotateCcw, Box, Play, Pause, Layers, Info, Compass, Sparkles, Eye, Shield } from 'lucide-react';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { RotateCcw, Box, Play, Pause, Layers, Info, Compass, Sparkles, Eye, Shield, GraduationCap, Volume2, ArrowLeft } from 'lucide-react';
 import { soundFX } from '../../utils/audioFX';
 
 // ══════════════════════════════════════════════
@@ -383,7 +386,13 @@ function createStarFieldPoints(count = 300, maxMag = 10) {
 // ══════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════
-export default function VectorScene({ visualizationData = null, theme = 'cyan' }) {
+export default function VectorScene({ 
+  visualizationData = null, 
+  theme = 'cyan',
+  harvardLecture = '',
+  onSpeakLecture = null,
+  onGoBackToResult = null
+}) {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const targetCenterRef = useRef(new THREE.Vector3(0, 0.5, 0));
@@ -432,8 +441,21 @@ export default function VectorScene({ visualizationData = null, theme = 'cyan' }
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
+
+    // POST-PROCESADO CINEMATOGRÁFICO UNREAL ENGINE (Bloom Holográfico)
+    const composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      0.85,  // fuerza de resplandor neón
+      0.45,  // radio de dispersión volumétrica
+      0.72   // umbral de luminosidad para destellos
+    );
+    composer.addPass(bloomPass);
 
     // Luces
     scene.add(new THREE.AmbientLight(0xffffff, 0.9));
@@ -570,7 +592,7 @@ export default function VectorScene({ visualizationData = null, theme = 'cyan' }
 
       starsGroup.rotation.y += 0.00015;
       gridGroup.rotation.y += 0.0005;
-      renderer.render(scene, camera);
+      composer.render();
     };
     renderLoop();
 
@@ -578,6 +600,7 @@ export default function VectorScene({ visualizationData = null, theme = 'cyan' }
       scene,
       camera,
       renderer,
+      composer,
       dynamicGroup,
       projectionGroup,
       gridGroup,
@@ -600,6 +623,8 @@ export default function VectorScene({ visualizationData = null, theme = 'cyan' }
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
+          composer.setSize(w, h);
+          bloomPass.resolution.set(w, h);
         }
       }
     });
@@ -618,6 +643,7 @@ export default function VectorScene({ visualizationData = null, theme = 'cyan' }
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      composer.dispose();
       renderer.dispose();
     };
   }, []);
@@ -1062,14 +1088,45 @@ export default function VectorScene({ visualizationData = null, theme = 'cyan' }
   return (
     <div className="w-full h-full flex flex-col justify-between relative overflow-hidden select-none bg-[#020617] rounded-2xl border border-cyan-500/30 shadow-2xl">
       {/* ── TOPBAR CONTROLES HUD ── */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 font-mono text-xs pointer-events-none gap-2">
-        {/* Título de estado */}
-        <div className="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-500/40 text-cyan-300 shadow-lg pointer-events-auto shrink-0">
-          <Box className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
-          <span className="font-bold tracking-wider text-[11px]">
-            ESPACIO 3D {cameraPreset.toUpperCase()}
-          </span>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 font-mono text-xs pointer-events-none gap-2 flex-wrap">
+        {/* Título de estado y Navegación */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {onGoBackToResult && (
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                onGoBackToResult();
+              }}
+              className="px-3 py-1.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-200 font-bold text-[10px] flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+              title="Volver al Pizarrón de Resultado"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Pizarrón</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-500/40 text-cyan-300 shadow-lg shrink-0">
+            <Box className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
+            <span className="font-bold tracking-wider text-[11px]">
+              ESPACIO 3D {cameraPreset.toUpperCase()}
+            </span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
+          </div>
+
+          {onSpeakLecture && (
+            <button
+              onClick={() => {
+                soundFX.playClick();
+                onSpeakLecture();
+              }}
+              className="px-2.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow"
+              title="Escuchar cátedra de Harvard mientras rotas los vectores en 3D"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
+              <span className="hidden sm:inline">Cátedra Harvard</span>
+              <Volume2 className="w-3 h-3 text-amber-400 animate-pulse" />
+            </button>
+          )}
         </div>
 
         {/* Botonera de Vistas y Herramientas */}

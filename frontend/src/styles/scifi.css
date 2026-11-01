@@ -212,6 +212,52 @@
   box-shadow: 0 0 12px var(--primary-glow);
 }
 
+/* ========================================================
+   VECTRA // ESTILOS AAA HOLOGRÁFICOS & GOLDEN KATEX
+   ======================================================== */
+
+.gold-chalk-katex {
+  color: #fef08a !important;
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.55), 0 0 24px rgba(234, 179, 8, 0.35) !important;
+  letter-spacing: 0.5px;
+}
+
+.gold-chalk-katex.hero-math {
+  font-size: 1.45rem !important;
+  text-shadow: 0 0 16px rgba(250, 204, 21, 0.75), 0 0 32px rgba(245, 158, 11, 0.45) !important;
+}
+
+/* Aceternity Border Beam */
+.border-beam-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.border-beam-container::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, var(--primary) 60deg, transparent 120deg);
+  animation: border-beam-spin 6s linear infinite;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+@keyframes border-beam-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Deep Glassmorphism */
+.deep-glass-panel {
+  background: rgba(4, 12, 24, 0.85);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
+}
+
 /* Botones estilo HUD */
 .hud-btn {
   background: rgba(0, 240, 255, 0.08);

@@ -41,13 +41,40 @@ export default function ControlBar({
     <div className="w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
       {/* 1. Botón Principal de Micrófono (PTT) con VU Meter y Selector de Micrófonos */}
       <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-        <div className="relative">
+        <div className="relative flex items-center justify-center p-1">
+          {/* Visualizador Radial Espectral Tipo Reactor Arc */}
+          <svg className="absolute -inset-2 w-14 h-14 pointer-events-none" viewBox="0 0 64 64">
+            {Array.from({ length: 20 }).map((_, i) => {
+              const angle = (i / 20) * Math.PI * 2;
+              const r1 = 25;
+              const r2 = 25 + (isListening ? 3 + audioLevel * 6 * (((i * 3) % 4) + 1) * 0.35 : 1.5);
+              const x1 = 32 + Math.cos(angle) * r1;
+              const y1 = 32 + Math.sin(angle) * r1;
+              const x2 = 32 + Math.cos(angle) * r2;
+              const y2 = 32 + Math.sin(angle) * r2;
+              return (
+                <line
+                  key={i}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={isListening ? (i % 2 === 0 ? '#ef4444' : '#fca5a5') : '#38bdf8'}
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  opacity={isListening ? Math.max(0.35, Math.min(1, audioLevel * 1.8)) : 0.25}
+                  className="transition-all duration-75"
+                />
+              );
+            })}
+          </svg>
+
           <button
             onClick={handleMicPress}
-            className={`relative p-3 rounded-full border transition-all cursor-pointer ${
+            className={`relative p-3 rounded-full border transition-all cursor-pointer z-10 ${
               isListening
-                ? 'bg-red-500 border-red-600 text-white shadow-lg shadow-red-500/30'
-                : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:border-slate-400 shadow-sm'
+                ? 'bg-red-500 border-red-600 text-white shadow-lg shadow-red-500/40 scale-105'
+                : 'bg-slate-900 border-cyan-500/40 text-cyan-300 hover:bg-slate-800 hover:border-cyan-400 shadow-sm'
             }`}
             title={isListening ? 'Soltar para procesar...' : 'Activar Micrófono (o mantén Barra Espaciadora)'}
           >
