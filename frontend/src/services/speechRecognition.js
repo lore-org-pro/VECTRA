@@ -229,7 +229,7 @@ export class SpeechRecognitionService {
       this.activeDeviceLabel = track.label;
     }
 
-    // Iniciar cadena de procesamiento DSP en tiempo real (Filtro paso alto + realce vocal + VU Meter)
+    // Iniciar cadena de procesamiento DSP en tiempo real (Filtros + VU Meter)
     this._startAudioDSP();
 
     // Subtítulos en paralelo si el navegador lo permite
@@ -237,9 +237,9 @@ export class SpeechRecognitionService {
       try { this.recognition.start(); } catch {}
     }
 
-    // MediaRecorder utilizando el audio filtrado (eliminando zumbidos y ruidos graves)
+    // MediaRecorder con stream limpio de hardware (aislamiento de voz APM nativo en C++ de Chromium)
     const mimeType = this._chooseMimeType();
-    const recordStream = this.processedStream || this.stream;
+    const recordStream = this.stream;
     try {
       this.mediaRecorder = new MediaRecorder(recordStream, mimeType ? { mimeType } : {});
     } catch {
@@ -248,10 +248,6 @@ export class SpeechRecognitionService {
 
     this.mediaRecorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) this.audioChunks.push(e.data);
-    };
-
-    this.mediaRecorder.onstop = () => {
-      this._processAudio();
     };
 
     this.mediaRecorder.start(80);
@@ -267,6 +263,9 @@ export class SpeechRecognitionService {
       if (!AudioCtx || !this.stream) return;
 
       this.audioCtx = new AudioCtx();
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume().catch(() => {});
+      }
       const source = this.audioCtx.createMediaStreamSource(this.stream);
 
       // A) Filtro Paso Alto Etapa 1 (115Hz): suprime zumbidos de aire acondicionado y resonancias graves
@@ -415,18 +414,31 @@ export class SpeechRecognitionService {
     }
 
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.onstop = () => {
+        this._stopAudioMeter();
+        if (this.stream) {
+          this.stream.getTracks().forEach((t) => t.stop());
+          this.stream = null;
+        }
+        this._processAudio();
+      };
       try {
         this.mediaRecorder.stop();
       } catch {
+        this._stopAudioMeter();
+        if (this.stream) {
+          this.stream.getTracks().forEach((t) => t.stop());
+          this.stream = null;
+        }
         this._processAudio();
       }
     } else {
+      this._stopAudioMeter();
+      if (this.stream) {
+        this.stream.getTracks().forEach((t) => t.stop());
+        this.stream = null;
+      }
       this._processAudio();
-    }
-
-    if (this.stream) {
-      this.stream.getTracks().forEach((t) => t.stop());
-      this.stream = null;
     }
 
     if (this.onStateChange) this.onStateChange(false);
@@ -439,13 +451,12 @@ export class SpeechRecognitionService {
     const elapsed = Date.now() - this.startTime;
 
     // Si no hubo energía vocal por encima del umbral de ruido del aula, descartar ruido silenciosamente
-    if (this.audioChunks.length === 0 || elapsed < this.minAudioMs || this.speechFramesCount < 3) {
-      console.log(`[SpeechRec] 🔇 Señal descartada: solo se detectó ruido ambiental de fondo (${this.speechFramesCount} frames de voz).`);
+    if (this.audioChunks.length === 0 || elapsed < this.minAudioMs) {
       const wsText = this.webSpeechTranscript.trim();
-      if (wsText && this.speechFramesCount >= 2 && this.onFinalTranscript) {
+      if (wsText && this.onFinalTranscript) {
         this.onFinalTranscript(wsText);
       } else if (this.onError) {
-        this.onError('ruido_ambiental_filtrado');
+        this.onError('empty_transcript');
       }
       return;
     }
@@ -464,15 +475,11 @@ export class SpeechRecognitionService {
         signal: AbortSignal.timeout(12000)
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await response.json().catch(() => ({ text: '' }));
       const text = (data.text || '').trim();
 
       if (text) {
-        console.log(`[SpeechRec] ✅ Whisper: "${text}" (${data.durationMs}ms)`);
+        console.log(`[SpeechRec] ✅ Whisper: "${text}" (${data.durationMs || 0}ms)`);
         if (this.onFinalTranscript) this.onFinalTranscript(text);
       } else {
         const wsText = this.webSpeechTranscript.trim();
@@ -483,12 +490,12 @@ export class SpeechRecognitionService {
         }
       }
     } catch (err) {
-      console.error('[SpeechRec] Error en Whisper:', err.message);
+      console.warn('[SpeechRec] Whisper fallback:', err.message);
       const wsText = this.webSpeechTranscript.trim();
       if (wsText && this.onFinalTranscript) {
         this.onFinalTranscript(wsText);
       } else if (this.onError) {
-        this.onError('whisper_failed');
+        this.onError('empty_transcript');
       }
     }
   }

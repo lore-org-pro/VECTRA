@@ -126,8 +126,29 @@ app.post('/api/transcribe', async (req, res) => {
       return res.status(500).json({ error: 'Groq API Key no configurada para Whisper' });
     }
 
-    const ext = contentType.includes('mp4') ? 'mp4' : contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'webm';
-    const audioBlob = new Blob([req.body], { type: contentType });
+    // Detección infalible de formato por Magic Bytes en lugar de headers ambiguos
+    let ext = 'webm';
+    let cleanMime = 'audio/webm';
+    const bodyBuf = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body);
+
+    if (bodyBuf[0] === 0x1A && bodyBuf[1] === 0x45 && bodyBuf[2] === 0xDF && bodyBuf[3] === 0xA3) {
+      ext = 'webm';
+      cleanMime = 'audio/webm';
+    } else if (bodyBuf.length >= 4 && bodyBuf.subarray(0, 4).toString() === 'RIFF') {
+      ext = 'wav';
+      cleanMime = 'audio/wav';
+    } else if (bodyBuf.length >= 4 && bodyBuf.subarray(0, 4).toString() === 'OggS') {
+      ext = 'ogg';
+      cleanMime = 'audio/ogg';
+    } else if (bodyBuf.length >= 8 && bodyBuf.subarray(4, 8).toString() === 'ftyp') {
+      ext = 'mp4';
+      cleanMime = 'audio/mp4';
+    } else {
+      ext = 'webm';
+      cleanMime = 'audio/webm';
+    }
+
+    const audioBlob = new Blob([bodyBuf], { type: cleanMime });
     const formData = new FormData();
     formData.append('file', audioBlob, `speech.${ext}`);
     formData.append('model', 'whisper-large-v3-turbo');
@@ -143,13 +164,13 @@ app.post('/api/transcribe', async (req, res) => {
         'Authorization': `Bearer ${groqKey}`
       },
       body: formData,
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(12000)
     });
 
     if (!groqResponse.ok) {
       const errText = await groqResponse.text();
       console.warn('[Whisper STT] Error de Groq:', errText);
-      return res.status(groqResponse.status).json({ error: errText });
+      return res.status(200).json({ error: errText, text: '', durationMs: Date.now() - startTime });
     }
 
     const result = await groqResponse.json();

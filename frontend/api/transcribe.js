@@ -6,7 +6,7 @@ import 'dotenv/config';
 
 export const config = {
   api: {
-    bodyParser: false, // Permitir stream binario de audio sin parseo JSON
+    bodyParser: false,
   },
 };
 
@@ -33,27 +33,44 @@ export default async function handler(req, res) {
       audioBuffer = Buffer.concat(chunks);
     }
 
-    if (!audioBuffer || audioBuffer.length < 500) {
-      return res.status(400).json({ error: 'Audio data is too small or empty', text: '' });
+    if (!audioBuffer || audioBuffer.length < 300) {
+      return res.status(200).json({ error: 'Audio data is too small or empty', text: '', durationMs: 0 });
     }
 
     const groqKey = (process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '').split(',')[0].trim();
     if (!groqKey) {
-      return res.status(500).json({ error: 'Groq API Key no configurada para Whisper' });
+      return res.status(200).json({ error: 'Groq API Key no configurada para Whisper', text: '' });
     }
 
-    const contentType = req.headers['content-type'] || 'audio/webm';
-    const ext = contentType.includes('mp4') ? 'mp4' : contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'webm';
+    // 2. Detección infalible de formato por Magic Bytes en lugar de headers ambiguos
+    let ext = 'webm';
+    let cleanMime = 'audio/webm';
 
-    // 2. Construir FormData para Groq Whisper
-    const audioBlob = new Blob([audioBuffer], { type: contentType });
+    if (audioBuffer[0] === 0x1A && audioBuffer[1] === 0x45 && audioBuffer[2] === 0xDF && audioBuffer[3] === 0xA3) {
+      ext = 'webm';
+      cleanMime = 'audio/webm';
+    } else if (audioBuffer.length >= 4 && audioBuffer.subarray(0, 4).toString() === 'RIFF') {
+      ext = 'wav';
+      cleanMime = 'audio/wav';
+    } else if (audioBuffer.length >= 4 && audioBuffer.subarray(0, 4).toString() === 'OggS') {
+      ext = 'ogg';
+      cleanMime = 'audio/ogg';
+    } else if (audioBuffer.length >= 8 && audioBuffer.subarray(4, 8).toString() === 'ftyp') {
+      ext = 'mp4';
+      cleanMime = 'audio/mp4';
+    } else {
+      ext = 'webm';
+      cleanMime = 'audio/webm';
+    }
+
+    // 3. Construir FormData con tipo MIME limpio y exacto para Groq
+    const audioBlob = new Blob([audioBuffer], { type: cleanMime });
     const formData = new FormData();
     formData.append('file', audioBlob, `speech.${ext}`);
     formData.append('model', 'whisper-large-v3-turbo');
     formData.append('language', 'es');
     formData.append('temperature', '0.0');
-    // Prompt acústico guía para filtrar ruido de aula escolar, murmullos y ecos
-    formData.append('prompt', 'VECTRA, asistente de matemáticas y vectores en aula con ruido de fondo. Transcribe únicamente la voz principal ignorando murmullos de alumnos y ruido ambiental. Operaciones: suma, resta, producto punto, cruz, magnitud, coordenadas, calcular, explicar.');
+    formData.append('prompt', 'VECTRA, asistente de matemáticas y vectores en aula escolar con ruido. Transcribe únicamente la voz principal en español: suma, resta, producto punto, cruz, magnitud, coordenadas, calcular, explicar.');
 
     const startTime = Date.now();
     const groqResponse = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
@@ -62,19 +79,19 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${groqKey}`
       },
       body: formData,
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(12000)
     });
 
     if (!groqResponse.ok) {
       const errText = await groqResponse.text();
-      console.warn('[Whisper STT] Error de Groq:', errText);
-      return res.status(groqResponse.status).json({ error: errText, text: '' });
+      console.warn('[Whisper STT] Aviso de Groq:', errText);
+      return res.status(200).json({ error: errText, text: '', durationMs: Date.now() - startTime });
     }
 
     const result = await groqResponse.json();
     let text = (result.text || '').trim();
 
-    // 3. Filtrar alucinaciones acústicas típicas de Whisper provocadas por ruido ambiental o silencio
+    // 4. Filtrar alucinaciones acústicas típicas de Whisper provocadas por ruido ambiental o silencio
     const isHallucination = [
       /subt[ií]tulos/i,
       /amara\.org/i,
@@ -88,7 +105,6 @@ export default async function handler(req, res) {
     ].some((rx) => rx.test(text));
 
     if (isHallucination) {
-      console.log(`[Whisper STT] 🔇 Ruido de fondo filtrado: "${text}"`);
       text = '';
     }
 
@@ -96,6 +112,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ text, durationMs });
   } catch (err) {
     console.error('[API-TRANSCRIBE-ERROR]', err);
-    return res.status(500).json({ error: err.message, text: '' });
+    return res.status(200).json({ error: err.message, text: '', durationMs: 0 });
   }
 }
