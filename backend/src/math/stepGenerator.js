@@ -108,25 +108,27 @@ export class StepGenerator {
       if (op === 'suma' && vectors.length >= 2) {
         const R = vectorEngine.add(v1, v2);
         const harvardLecture = buildHarvardExplanation('suma', [v1, v2], R);
-        const canR = formatCanonicalLatex(R[0], R[1], R[2]).replace(/\\hat\{i\}/g, 'i').replace(/\\hat\{j\}/g, 'j').replace(/\\hat\{k\}/g, 'k').replace(/\\/g, '');
         verifiedData = {
-          habla: `El vector resultante es ${canR}. ${harvardLecture}`,
+          habla: `Resolvamos la suma de vectores paso a paso en el pizarrón. Presta atención al desarrollo cartesiano.`,
           emocion: 'feliz',
           pasos: [
             {
-              titulo: 'Identificación de Vectores',
+              titulo: 'Identificación de Vectores en el Espacio',
               latex: `\\vec{A} = \\langle ${v1[0]}, ${v1[1]}, ${v1[2]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, ${v2[1]}, ${v2[2]} \\rangle`,
-              explicacion: 'Extraemos las componentes cartesianas de los dos vectores.'
+              explicacion: `Vector A = (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}) y Vector B = (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}).`,
+              locucion: `Primer paso. Observa en la pizarra la identificación de los dos vectores. El vector A tiene componentes ${v1[0]} en el eje X horizontal y ${v1[1]} en el eje Y vertical${v1[2] ? ', con cota ' + v1[2] + ' en Z' : ''}. El vector B se define con ${v2[0]} en X y ${v2[1]} en Y${v2[2] ? ', con ' + v2[2] + ' en Z' : ''}. Cada número marca exactamente su posición cartesiana.`
             },
             {
-              titulo: 'Suma Analítica en R³',
+              titulo: 'Suma Analítica Componente a Componente',
               latex: `\\vec{R} = \\langle ${v1[0]} + (${v2[0]}), \\; ${v1[1]} + (${v2[1]}), \\; ${v1[2]} + (${v2[2]}) \\rangle`,
-              explicacion: 'Sumamos las coordenadas homólogas en X, Y y Z.'
+              explicacion: `Sumamos las coordenadas homólogas: (${v1[0]} + ${v2[0]}) en X, (${v1[1]} + ${v2[1]}) en Y, (${v1[2]} + ${v2[2]}) en Z.`,
+              locucion: `Segundo paso. Aplicamos el principio de superposición lineal. Como ves en pantalla, sumamos de forma estricta las componentes homólogas: en el eje X sumamos ${v1[0]} con ${v2[0]}, y en el eje Y sumamos ${v1[1]} con ${v2[1]}${v1[2] || v2[2] ? ', y en Z ' + v1[2] + ' con ' + v2[2] : ''}. Es fundamental respetar los paréntesis en valores negativos para mantener la dirección correcta.`
             },
             {
               titulo: 'Vector Resultante Simplificado',
               latex: `\\vec{R} = \\langle ${R[0]}, ${R[1]}, ${R[2]} \\rangle`,
-              explicacion: `La magnitud del vector resultante es |R| = √(${R[0] * R[0] + R[1] * R[1] + R[2] * R[2]}) ≈ ${Math.round(vectorEngine.magnitude(R) * 100) / 100}.`
+              explicacion: `Vector resultante simplificado: (${R[0]}, ${R[1]}${R[2] ? ', ' + R[2] : ''}) con módulo ||R|| ≈ ${Math.round(vectorEngine.magnitude(R) * 100) / 100}.`,
+              locucion: `Tercer paso. Al calcular la aritmética obtenemos el vector resultante: ${R[0]} unidades en dirección del versor i, y ${R[1] < 0 ? 'menos ' + Math.abs(R[1]) : 'más ' + R[1]} unidades en dirección del versor j${R[2] ? ', con ' + R[2] + ' en k' : ''}. Su longitud total o módulo euclidiano es de aproximadamente ${Math.round(vectorEngine.magnitude(R) * 100) / 100} unidades.`
             }
           ],
           resultado: {
@@ -146,20 +148,27 @@ export class StepGenerator {
       } else if (op === 'resta' && vectors.length >= 2) {
         const D = vectorEngine.subtract(v1, v2);
         const harvardLecture = buildHarvardExplanation('resta', [v1, v2], D);
-        const canD = formatCanonicalLatex(D[0], D[1], D[2]).replace(/\\hat\{i\}/g, 'i').replace(/\\hat\{j\}/g, 'j').replace(/\\hat\{k\}/g, 'k').replace(/\\/g, '');
         verifiedData = {
-          habla: `El vector diferencia es ${canD}. ${harvardLecture}`,
+          habla: `Analicemos la resta de vectores término a término en el pizarrón.`,
           emocion: 'neutral',
           pasos: [
             {
-              titulo: 'Planteamiento de la Diferencia',
-              latex: `\\vec{D} = \\vec{A} - \\vec{B} = \\langle ${v1[0]} - (${v2[0]}), \\; ${v1[1]} - (${v2[1]}), \\; ${v1[2]} - (${v2[2]}) \\rangle`,
-              explicacion: 'Restamos las coordenadas de B de las coordenadas de A.'
+              titulo: 'Identificación de Minuendo y Sustraendo',
+              latex: `\\vec{A} = \\langle ${v1[0]}, ${v1[1]}, ${v1[2]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, ${v2[1]}, ${v2[2]} \\rangle`,
+              explicacion: `Minuendo A = (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}) y Sustraendo B = (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}).`,
+              locucion: `Primer paso. Identificamos en el pizarrón el vector A como minuendo con componentes (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}), y el vector B como sustraendo con componentes (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}). La resta geométrica determinará el vector de desplazamiento directo que va desde el extremo de B hacia el extremo de A.`
             },
             {
-              titulo: 'Vector Diferencia',
+              titulo: 'Diferencia Algebraica de Coordenadas',
+              latex: `\\vec{D} = \\vec{A} - \\vec{B} = \\langle ${v1[0]} - (${v2[0]}), \\; ${v1[1]} - (${v2[1]}), \\; ${v1[2]} - (${v2[2]}) \\rangle`,
+              explicacion: `Restamos cada componente de B respecto a A: (${v1[0]} - ${v2[0]}) en X, (${v1[1]} - ${v2[1]}) en Y.`,
+              locucion: `Segundo paso. Planteamos la diferencia algebraica. A cada coordenada del primer vector le restamos la coordenada correspondiente del segundo vector. Observa en la fórmula cómo un signo menos delante de otro negativo se transforma en adición positiva.`
+            },
+            {
+              titulo: 'Vector Diferencia Simplificado',
               latex: `\\vec{D} = \\langle ${D[0]}, ${D[1]}, ${D[2]} \\rangle`,
-              explicacion: `Módulo |D| ≈ ${Math.round(vectorEngine.magnitude(D) * 100) / 100}.`
+              explicacion: `Vector desplazamiento D = (${D[0]}, ${D[1]}${D[2] ? ', ' + D[2] : ''}) con módulo ||D|| ≈ ${Math.round(vectorEngine.magnitude(D) * 100) / 100}.`,
+              locucion: `Tercer paso. Tras realizar las restas obtenemos el vector diferencia final: ${D[0]} unidades en X y ${D[1]} unidades en Y${D[2] ? ' con ' + D[2] + ' en Z' : ''}, caracterizando con exactitud la separación vectorial entre ambos estados.`
             }
           ],
           resultado: {
@@ -179,25 +188,27 @@ export class StepGenerator {
       } else if (op === 'producto_cruz' && vectors.length >= 2) {
         const cross = vectorEngine.crossProduct(v1, v2);
         const harvardLecture = buildHarvardExplanation('producto_cruz', [v1, v2], cross);
-        const canCross = formatCanonicalLatex(cross[0], cross[1], cross[2]).replace(/\\hat\{i\}/g, 'i').replace(/\\hat\{j\}/g, 'j').replace(/\\hat\{k\}/g, 'k').replace(/\\/g, '');
         verifiedData = {
-          habla: `El producto cruz genera el vector perpendicular ${canCross}. ${harvardLecture}`,
+          habla: `Desarrollemos el producto cruz y su determinante en el pizarrón.`,
           emocion: 'enfasis',
           pasos: [
             {
               titulo: 'Determinante del Producto Vectorial',
               latex: `\\vec{A} \\times \\vec{B} = \\begin{vmatrix} \\hat{i} & \\hat{j} & \\hat{k} \\\\ ${v1[0]} & ${v1[1]} & ${v1[2]} \\\\ ${v2[0]} & ${v2[1]} & ${v2[2]} \\end{vmatrix}`,
-              explicacion: 'Construimos la matriz de orden 3 con la base canónica.'
+              explicacion: 'Construimos la matriz de orden 3 con la base canónica i, j, k en la primera fila.',
+              locucion: `Primer paso. Planteamos en la pizarra el determinante formal de orden 3. En la primera fila situamos los versores ortogonales i, j, k. En la segunda fila las componentes del vector A (${v1[0]}, ${v1[1]}, ${v1[2]}), y en la tercera fila las componentes de B (${v2[0]}, ${v2[1]}, ${v2[2]}).`
             },
             {
               titulo: 'Cálculo por Menores y Cofactores',
               latex: `\\hat{i}((${v1[1]})(${v2[2]}) - (${v1[2]})(${v2[1]})) - \\hat{j}((${v1[0]})(${v2[2]}) - (${v1[2]})(${v2[0]})) + \\hat{k}((${v1[0]})(${v2[1]}) - (${v1[1]})(${v2[0]}))`,
-              explicacion: 'Efectuamos el cálculo de cada coordenada respetando la alternancia de signos.'
+              explicacion: 'Multiplicamos las diagonales cruzadas respetando los signos alternados (+i, -j, +k).',
+              locucion: `Segundo paso. Desarrollamos por cofactores. Multiplicamos las diagonales en cruz: para i calculamos ${v1[1]} por ${v2[2]} menos ${v1[2]} por ${v2[1]}. Para j alternamos con signo negativo, y para k sumamos el menor restante. Esta alternancia de signos es la que garantiza la perpendicularidad exacta.`
             },
             {
               titulo: 'Vector Perpendicular Resultante',
               latex: `\\vec{A} \\times \\vec{B} = \\langle ${cross[0]}, ${cross[1]}, ${cross[2]} \\rangle`,
-              explicacion: `El vector resultante forma 90 grados con ambos vectores originales.`
+              explicacion: `El vector resultante es perpendicular a ambos vectores originales formando 90°.`,
+              locucion: `Tercer paso. Resolviendo los productos aritméticos obtenemos el vector ortogonal: ${cross[0]} en i, ${cross[1]} en j y ${cross[2]} en k. Este nuevo vector es rigurosamente perpendicular tanto a A como a B según la regla de la mano derecha.`
             }
           ],
           resultado: {
@@ -219,18 +230,22 @@ export class StepGenerator {
         const isOrth = vectorEngine.isOrthogonal(v1, v2);
         const harvardLecture = buildHarvardExplanation('producto_punto', [v1, v2], dot);
         verifiedData = {
-          habla: `El producto escalar de los vectores da ${dot}. ${harvardLecture}`,
+          habla: `Evaluemos el producto escalar y su ortogonalidad paso a paso.`,
           emocion: isOrth ? 'feliz' : 'neutral',
           pasos: [
             {
               titulo: 'Definición del Producto Punto',
               latex: `\\vec{A} \\cdot \\vec{B} = A_x B_x + A_y B_y + A_z B_z`,
-              explicacion: 'Multiplicamos las componentes correspondientes y sumamos los productos.'
+              explicacion: 'Multiplicamos las componentes correspondientes y sumamos los productos.',
+              locucion: `Primer paso. Observa en la pizarra la definición del producto escalar. Multiplicamos cada componente del vector A por su correspondiente en B: X con X, Y con Y, y Z con Z. Recuerda que el producto escalar produce un número único y no un vector.`
             },
             {
-              titulo: 'Evaluación Numérica',
+              titulo: 'Evaluación Numérica y Ortogonalidad',
               latex: `(${v1[0]})(${v2[0]}) + (${v1[1]})(${v2[1]}) + (${v1[2]})(${v2[2]}) = ${dot}`,
-              explicacion: isOrth ? 'La suma de los productos se anula exactamente a cero.' : `El valor escalar resultante es ${dot}.`
+              explicacion: isOrth ? 'La suma de los productos da exactamente 0: vectores estrictamente ortogonales (90°).' : `El valor escalar resultante es ${dot}. Al ser diferente de cero, los vectores no forman 90°.`,
+              locucion: isOrth
+                ? `Segundo paso. Al multiplicar (${v1[0]} por ${v2[0]}) más (${v1[1]} por ${v2[1]}) más (${v1[2]} por ${v2[2]}), la suma se anula exactamente a cero. En pantalla ves el resultado cero, lo que demuestra matemáticamente que ambos vectores forman un ángulo recto de 90 grados y son ortogonales.`
+                : `Segundo paso. Efectuamos las multiplicaciones y la adición, obteniendo un valor escalar final de ${dot}. Al ser distinto de cero, los vectores no forman 90 grados entre sí.`
             }
           ],
           resultado: {
@@ -250,18 +265,20 @@ export class StepGenerator {
         const mag = Math.round(vectorEngine.magnitude(v1) * 1000) / 1000;
         const harvardLecture = buildHarvardExplanation('magnitud', [v1], mag);
         verifiedData = {
-          habla: `La magnitud euclidiana del vector es ${mag} unidades. ${harvardLecture}`,
+          habla: `Calculemos la norma euclidiana del vector paso a paso en el pizarrón.`,
           emocion: 'feliz',
           pasos: [
             {
-              titulo: 'Fórmula de la Norma',
+              titulo: 'Fórmula de la Norma Euclídea',
               latex: `\\|\\vec{v}\\| = \\sqrt{x^2 + y^2 + z^2}`,
-              explicacion: 'Aplicamos el teorema de Pitágoras en tres dimensiones.'
+              explicacion: 'Aplicamos el teorema de Pitágoras tridimensional.',
+              locucion: `Primer paso. Para calcular el módulo o tamaño del vector, aplicamos en la pizarra la generalización del teorema de Pitágoras: la raíz cuadrada de la suma de los cuadrados de cada una de sus coordenadas.`
             },
             {
-              titulo: 'Sustitución Numérica',
+              titulo: 'Sustitución y Radicación',
               latex: `\\sqrt{(${v1[0]})^2 + (${v1[1]})^2 + (${v1[2]})^2} = \\sqrt{${v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]}} = ${mag}`,
-              explicacion: 'Sumamos los cuadrados de cada coordenada y extraemos la raíz cuadrada principal.'
+              explicacion: `Suma de cuadrados = ${v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]}, cuya raíz cuadrada es ${mag}.`,
+              locucion: `Segundo paso. Elevamos al cuadrado cada componente, sumamos los valores obtenidos resultando en ${v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]}, y extrayendo la raíz cuadrada principal obtenemos una longitud exacta de ${mag} unidades.`
             }
           ],
           resultado: {
@@ -281,23 +298,26 @@ export class StepGenerator {
         const mag2 = Math.round(vectorEngine.magnitude(v2) * 100) / 100;
         const harvardLecture = `Análisis formal de cátedra: el ángulo diedro entre ambos vectores se deduce del producto interno euclidiano normalizado por el producto de sus normas. Con un ángulo de ${ang.degrees} grados (${Math.round(ang.radians * 100) / 100} radianes), los vectores forman una configuración ${ang.degrees < 90 ? 'aguda de convergencia direccional' : ang.degrees === 90 ? 'estrictamente ortogonal en cuadratura' : 'obtusa de dispersión direccional'}, verificando el postulado del coseno en espacios prehilbertianos.`;
         verifiedData = {
-          habla: `El ángulo formado entre ambos vectores es de aproximadamente ${ang.degrees} grados. ${harvardLecture}`,
+          habla: `Determinemos el ángulo diedro entre ambos vectores paso a paso.`,
           emocion: 'neutral',
           pasos: [
             {
               titulo: 'Fórmula del Coseno del Ángulo',
               latex: `\\cos(\\theta) = \\frac{\\vec{A} \\cdot \\vec{B}}{\\|\\vec{A}\\| \\|\\vec{B}\\|}`,
-              explicacion: 'El ángulo se obtiene a partir de la definición geométrica del producto escalar.'
+              explicacion: 'El ángulo se obtiene despejando el coseno a partir del producto escalar.',
+              locucion: `Primer paso. Como observas en la pizarra, el coseno del ángulo formado por dos vectores equivale al cociente entre su producto escalar y la multiplicación de sus respectivas normas euclidianas.`
             },
             {
-              titulo: 'Cálculo de Producto Punto y Magnitudes',
+              titulo: 'Cálculo de Numerador y Denominador',
               latex: `\\vec{A} \\cdot \\vec{B} = ${dot}, \\quad \\|\\vec{A}\\| = ${mag1}, \\quad \\|\\vec{B}\\| = ${mag2}`,
-              explicacion: `Multiplicando las magnitudes obtenemos el denominador ${Math.round(mag1 * mag2 * 100) / 100}.`
+              explicacion: `Numerador = ${dot}. Denominador = ${Math.round(mag1 * mag2 * 100) / 100}.`,
+              locucion: `Segundo paso. Evaluamos las operaciones: el producto punto en el numerador resulta en ${dot}, y multiplicando las magnitudes obtenemos ${Math.round(mag1 * mag2 * 100) / 100} en el denominador.`
             },
             {
               titulo: 'Aplicación del Arcocoseno',
               latex: `\\theta = \\arccos\\left(\\frac{${dot}}{${Math.round(mag1 * mag2 * 100) / 100}}\\right) \\approx ${ang.degrees}^\\circ \\; (${Math.round(ang.radians * 100) / 100} \\text{ rad})`,
-              explicacion: `El ángulo resultante es de ${ang.degrees} grados sexagesimales.`
+              explicacion: `El ángulo resultante es de ${ang.degrees} grados sexagesimales.`,
+              locucion: `Tercer paso. Aplicamos la función inversa del arcocoseno al cociente obtenido, concluyendo que ambos vectores forman un ángulo diedro de aproximadamente ${ang.degrees} grados sexagesimales.`
             }
           ],
           resultado: {

@@ -3,8 +3,6 @@ import HeaderHUD from './components/hud/HeaderHUD';
 import SubtitleBar from './components/hud/SubtitleBar';
 import ControlBar from './components/hud/ControlBar';
 import CartoonFace from './components/face/CartoonFace';
-import HolographicFace from './components/face/HolographicFace';
-import ThreeDFace from './components/face/ThreeDFace';
 import ProcedureBoard from './components/board/ProcedureBoard';
 import ResultBoard from './components/board/ResultBoard';
 import { cleanTextForDisplay } from './utils/latexUtils';
@@ -32,14 +30,7 @@ export default function App() {
   // Aviso discreto si el navegador (como Brave) bloquea el micrófono de Google
   const [braveMicNotice, setBraveMicNotice] = useState(false);
 
-  // 2. Estados Visuales y de Expresión Facial (Modo Holográfico AAA por Defecto)
-  const [avatarMode, setAvatarMode] = useState(() => {
-    try {
-      return localStorage.getItem('vectra_avatar_mode') || 'holographic';
-    } catch {
-      return 'holographic';
-    }
-  });
+  // 2. Estados Visuales y de Expresión Facial (Rostro Clásico Exclusivo)
   const [isStarted, setIsStarted] = useState(false);
   const [theme, setTheme] = useState('cyan');
   const [systemState, setSystemState] = useState('reposo');
@@ -683,61 +674,15 @@ export default function App() {
             )}
           </div>
 
-          {/* 2. Selector de Modo Avatar y Rostro Holográfico 3D */}
-          <div className="w-full flex-1 min-h-0 flex flex-col items-center justify-center relative py-1">
-            {/* Selector flotante de diseño AAA */}
-            <div className="absolute top-1 z-30 pointer-events-auto flex items-center gap-1 bg-slate-900/85 backdrop-blur-md px-2 py-0.5 rounded-full border border-cyan-500/35 text-[10px] font-mono shadow-lg">
-              <button
-                type="button"
-                onClick={() => { soundFX.playClick(); setAvatarMode('holographic'); localStorage.setItem('vectra_avatar_mode', 'holographic'); }}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${avatarMode === 'holographic' ? 'bg-cyan-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-              >
-                🌌 Holográfico 3D
-              </button>
-              <button
-                type="button"
-                onClick={() => { soundFX.playClick(); setAvatarMode('3d_eyes'); localStorage.setItem('vectra_avatar_mode', '3d_eyes'); }}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${avatarMode === '3d_eyes' ? 'bg-cyan-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-              >
-                💎 3D Studio
-              </button>
-              <button
-                type="button"
-                onClick={() => { soundFX.playClick(); setAvatarMode('cartoon'); localStorage.setItem('vectra_avatar_mode', 'cartoon'); }}
-                className={`px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${avatarMode === 'cartoon' ? 'bg-cyan-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-              >
-                🎨 Clásico
-              </button>
-            </div>
-
-            <div className="w-full h-full flex items-center justify-center pointer-events-none">
-              {avatarMode === 'holographic' ? (
-                <HolographicFace
-                  state={systemState}
-                  emotion={emotion}
-                  viseme={viseme}
-                  audioLevel={audioLevel}
-                  theme={theme}
-                />
-              ) : avatarMode === '3d_eyes' ? (
-                <ThreeDFace
-                  state={systemState}
-                  emotion={emotion}
-                  viseme={viseme}
-                  audioLevel={audioLevel}
-                  isSpeaking={systemState === 'hablando'}
-                  bgColor="transparent"
-                />
-              ) : (
-                <CartoonFace
-                  state={systemState}
-                  emotion={emotion}
-                  viseme={viseme}
-                  audioLevel={audioLevel}
-                  isSpeaking={systemState === 'hablando'}
-                />
-              )}
-            </div>
+          {/* 2. Rostro animado interactivo clásico */}
+          <div className="w-full flex-1 min-h-0 flex items-center justify-center relative pointer-events-none py-1">
+            <CartoonFace
+              state={systemState}
+              emotion={emotion}
+              viseme={viseme}
+              audioLevel={audioLevel}
+              isSpeaking={systemState === 'hablando'}
+            />
           </div>
 
           {/* 3. Panel de Diálogo y Sugerencias Interactivas */}
@@ -929,34 +874,15 @@ export default function App() {
             {/* ── COLUMNA IZQUIERDA: CARA + DIÁLOGO ── */}
             <div className="w-[28%] min-w-[200px] max-w-[280px] shrink-0 flex flex-col gap-2 min-h-0">
 
-              {/* Panel de la cara — ocupa la mayoría del espacio */}
-              <div className="flex-1 min-h-0 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-md flex items-center justify-center relative">
-                {avatarMode === 'holographic' ? (
-                  <HolographicFace
-                    state={systemState}
-                    emotion={emotion}
-                    viseme={viseme}
-                    audioLevel={audioLevel}
-                    theme={theme}
-                  />
-                ) : avatarMode === '3d_eyes' ? (
-                  <ThreeDFace
-                    state={systemState}
-                    emotion={emotion}
-                    viseme={viseme}
-                    audioLevel={audioLevel}
-                    isSpeaking={systemState === 'hablando'}
-                    bgColor="transparent"
-                  />
-                ) : (
-                  <CartoonFace
-                    state={systemState}
-                    emotion={emotion}
-                    viseme={viseme}
-                    audioLevel={audioLevel}
-                    isSpeaking={systemState === 'hablando'}
-                  />
-                )}
+              {/* Panel de la cara clásico */}
+              <div className="flex-1 min-h-0 rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-md flex items-center justify-center">
+                <CartoonFace
+                  state={systemState}
+                  emotion={emotion}
+                  viseme={viseme}
+                  audioLevel={audioLevel}
+                  isSpeaking={systemState === 'hablando'}
+                />
               </div>
 
               {/* Tarjeta de diálogo de VECTRA */}
