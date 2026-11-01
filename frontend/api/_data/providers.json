@@ -1,0 +1,130 @@
+[
+  {
+    "id": "groq",
+    "name": "Groq Cloud (Qwen 27B / GPT-OSS)",
+    "adapter": "openai",
+    "baseURL": "https://api.groq.com/openai/v1",
+    "model": "qwen/qwen3.8-27b",
+    "fastModel": "openai/gpt-oss-20b",
+    "apiKeyEnv": "GROQ_API_KEYS",
+    "limits": {
+      "rpm": 30,
+      "rpd": 14400
+    },
+    "timeoutMs": 8500,
+    "priority": 1,
+    "active": true
+  },
+  {
+    "id": "openai",
+    "name": "OpenAI Oficial (GPT-4o / GPT-5.5)",
+    "adapter": "openai",
+    "baseURL": "https://api.openai.com/v1",
+    "model": "gpt-4o",
+    "fastModel": "gpt-4o-mini",
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "limits": {
+      "rpm": 60,
+      "rpd": 100000
+    },
+    "timeoutMs": 12000,
+    "priority": 2,
+    "active": true
+  },
+  {
+    "id": "demo",
+    "name": "Motor Matemático & Demo Offline",
+    "adapter": "demo",
+    "baseURL": "local://demo-data",
+    "model": "deterministic-demo-engine",
+    "fastModel": "deterministic-demo-engine",
+    "apiKeyEnv": "NONE",
+    "limits": {
+      "rpm": 9999,
+      "rpd": 999999
+    },
+    "timeoutMs": 50,
+    "priority": 99,
+    "active": true
+  },
+  {
+    "id": "gemini",
+    "name": "Google Gemini 2.0 Flash",
+    "adapter": "gemini",
+    "baseURL": "https://generativelanguage.googleapis.com/v1beta",
+    "model": "gemini-2.0-flash",
+    "fastModel": "gemini-2.0-flash-lite",
+    "apiKeyEnv": "GEMINI_API_KEYS",
+    "limits": {
+      "rpm": 15,
+      "rpd": 1500
+    },
+    "timeoutMs": 8000,
+    "priority": 3,
+    "active": true
+  },
+  {
+    "id": "openrouter",
+    "name": "OpenRouter (Free Tier)",
+    "adapter": "openai",
+    "baseURL": "https://openrouter.ai/api/v1",
+    "model": "meta-llama/llama-3.3-70b-instruct:free",
+    "fastModel": "meta-llama/llama-3.1-8b-instruct:free",
+    "apiKeyEnv": "OPENROUTER_API_KEYS",
+    "limits": {
+      "rpm": 20,
+      "rpd": 200
+    },
+    "timeoutMs": 8500,
+    "priority": 4,
+    "active": true
+  },
+  {
+    "id": "mistral",
+    "name": "Mistral La Plateforme",
+    "adapter": "openai",
+    "baseURL": "https://api.mistral.ai/v1",
+    "model": "mistral-small-latest",
+    "fastModel": "mistral-small-latest",
+    "apiKeyEnv": "MISTRAL_API_KEYS",
+    "limits": {
+      "rpm": 10,
+      "rpd": 1000
+    },
+    "timeoutMs": 8000,
+    "priority": 5,
+    "active": true
+  },
+  {
+    "id": "nvidia",
+    "name": "NVIDIA NIM",
+    "adapter": "openai",
+    "baseURL": "https://integrate.api.nvidia.com/v1",
+    "model": "meta/llama-3.3-70b-instruct",
+    "fastModel": "meta/llama-3.1-8b-instruct",
+    "apiKeyEnv": "NVIDIA_NIM_API_KEYS",
+    "limits": {
+      "rpm": 15,
+      "rpd": 1000
+    },
+    "timeoutMs": 8000,
+    "priority": 6,
+    "active": true
+  },
+  {
+    "id": "ollama",
+    "name": "Ollama Local (Offline)",
+    "adapter": "ollama",
+    "baseURL": "http://127.0.0.1:11434",
+    "model": "qwen3.5:0.8b",
+    "fastModel": "qwen3.5:0.8b",
+    "apiKeyEnv": "NONE",
+    "limits": {
+      "rpm": 9999,
+      "rpd": 999999
+    },
+    "timeoutMs": 10000,
+    "priority": 7,
+    "active": false
+  }
+]

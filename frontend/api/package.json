@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "mathjs": "^14.2.1",
+    "node-edge-tts": "^1.2.11"
+  }
+}

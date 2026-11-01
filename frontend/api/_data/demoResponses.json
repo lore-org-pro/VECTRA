@@ -1,0 +1,487 @@
+{
+  "q1": {
+    "habla": "Para sumar dos vectores en el espacio, sumamos algebraicamente sus componentes cartesianas x, y, y z. El vector resultante es (3, -1, 1).",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Identificación de Componentes",
+        "latex": "\\vec{A} = \\langle 2, 3, -1 \\rangle, \\quad \\vec{B} = \\langle 1, -4, 2 \\rangle",
+        "explicacion": "Extraemos las coordenadas en la base estándar tridimensional."
+      },
+      {
+        "titulo": "Suma Componente a Componente",
+        "latex": "\\vec{R} = \\langle 2 + 1, \\; 3 + (-4), \\; -1 + 2 \\rangle",
+        "explicacion": "Sumamos independientemente las coordenadas en el eje X, eje Y y eje Z."
+      },
+      {
+        "titulo": "Vector Resultante",
+        "latex": "\\vec{R} = \\langle 3, -1, 1 \\rangle",
+        "explicacion": "El módulo del vector resultante es |R| = √(9 + 1 + 1) = √11 ≈ 3.32 unidades."
+      }
+    ],
+    "resultado": {
+      "latex": "\\vec{R} = 3\\hat{i} - \\hat{j} + \\hat{k}",
+      "texto": "El vector suma es (3, -1, 1)."
+    },
+    "visualizacion": {
+      "tipo": "suma",
+      "vectores": [
+        { "nombre": "A", "componentes": [2, 3, -1], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [1, -4, 2], "color": "#ffaa00" },
+        { "nombre": "R", "componentes": [3, -1, 1], "color": "#00ff88" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es el ángulo entre A y B?", "¿Cuál es su producto cruz?"]
+  },
+  "q2": {
+    "habla": "La resta de vectores equivale a sumar el vector opuesto de B. Restando componente a componente obtenemos el vector (3, -3, 3).",
+    "emocion": "neutral",
+    "pasos": [
+      {
+        "titulo": "Planteamiento de la Diferencia",
+        "latex": "\\vec{D} = \\vec{A} - \\vec{B} = \\langle 4 - 1, \\; 2 - 5, \\; 1 - (-2) \\rangle",
+        "explicacion": "Restamos las coordenadas de B a las coordenadas de A."
+      },
+      {
+        "titulo": "Simplificación de Coordenadas",
+        "latex": "\\vec{D} = \\langle 3, -3, 3 \\rangle",
+        "explicacion": "Nótese que todas las componentes tienen la misma magnitud con signos alternados."
+      }
+    ],
+    "resultado": {
+      "latex": "\\vec{D} = 3\\hat{i} - 3\\hat{j} + 3\\hat{k}",
+      "texto": "El vector resta es (3, -3, 3)."
+    },
+    "visualizacion": {
+      "tipo": "resta",
+      "vectores": [
+        { "nombre": "A", "componentes": [4, 2, 1], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [1, 5, -2], "color": "#ffaa00" },
+        { "nombre": "D", "componentes": [3, -3, 3], "color": "#ff3366" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es la norma de la resta?", "¿Cómo se representa geométricamente?"]
+  },
+  "q3": {
+    "habla": "Al multiplicar un vector por el escalar negativo menos dos, duplicamos su longitud e invertimos completamente su sentido en el espacio.",
+    "emocion": "enfasis",
+    "pasos": [
+      {
+        "titulo": "Propiedad Distributiva del Escalar",
+        "latex": "k\\vec{v} = -2 \\cdot \\langle 2, -1, 3 \\rangle = \\langle -2(2), \\; -2(-1), \\; -2(3) \\rangle",
+        "explicacion": "El escalar multiplica uniformemente a cada una de las componentes."
+      },
+      {
+        "titulo": "Vector Resultante Escalado",
+        "latex": "k\\vec{v} = \\langle -4, 2, -6 \\rangle",
+        "explicacion": "El nuevo vector tiene una magnitud de exactamente el doble que el original."
+      }
+    ],
+    "resultado": {
+      "latex": "-2\\vec{v} = \\langle -4, 2, -6 \\rangle",
+      "texto": "El vector multiplicado por -2 es (-4, 2, -6)."
+    },
+    "visualizacion": {
+      "tipo": "escalar",
+      "vectores": [
+        { "nombre": "v", "componentes": [2, -1, 3], "color": "#00f0ff" },
+        { "nombre": "-2v", "componentes": [-4, 2, -6], "color": "#ffaa00" }
+      ]
+    },
+    "sugerencias": ["¿Qué pasa si el escalar es una fracción?", "¿Cuál es el vector unitario?"]
+  },
+  "q4": {
+    "habla": "Calculamos la magnitud aplicando el teorema de Pitágoras tridimensional. La suma de los cuadrados da 49, cuya raíz cuadrada exacta es 7.",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Fórmula de la Norma Euclidiana",
+        "latex": "\\|\\vec{v}\\| = \\sqrt{x^2 + y^2 + z^2}",
+        "explicacion": "La magnitud representa la longitud física del vector en el espacio euclidiano."
+      },
+      {
+        "titulo": "Suma de Cuadrados",
+        "latex": "\\|\\vec{v}\\| = \\sqrt{3^2 + (-6)^2 + 2^2} = \\sqrt{9 + 36 + 4} = \\sqrt{49}",
+        "explicacion": "Los números negativos elevados al cuadrado se convierten en valores positivos."
+      },
+      {
+        "titulo": "Magnitud Calculada",
+        "latex": "\\|\\vec{v}\\| = 7",
+        "explicacion": "El vector tiene una longitud entera de 7 unidades."
+      }
+    ],
+    "resultado": {
+      "latex": "\\|\\vec{v}\\| = 7",
+      "texto": "La magnitud es 7 unidades."
+    },
+    "visualizacion": {
+      "tipo": "escalar",
+      "vectores": [
+        { "nombre": "v", "componentes": [3, -6, 2], "color": "#00ff88" }
+      ]
+    },
+    "sugerencias": ["¿Cómo normalizo este vector?", "¿Cuál es su ángulo respecto a los ejes coordenados?"]
+  },
+  "q5": {
+    "habla": "Para obtener el vector unitario dividimos cada componente entre la magnitud del vector. Como su norma es 5, el vector unitario es cuatro quintos en i y menos tres quintos en j.",
+    "emocion": "neutral",
+    "pasos": [
+      {
+        "titulo": "Cálculo de la Norma",
+        "latex": "\\|\\vec{v}\\| = \\sqrt{4^2 + (-3)^2 + 0^2} = \\sqrt{16 + 9} = 5",
+        "explicacion": "Determinamos primero la longitud del vector."
+      },
+      {
+        "titulo": "Normalización",
+        "latex": "\\hat{u} = \\frac{\\vec{v}}{\\|\\vec{v}\\|} = \\left\\langle \\frac{4}{5}, \\; -\\frac{3}{5}, \\; 0 \\right\\rangle",
+        "explicacion": "Dividimos cada coordenada entre 5 para que la nueva longitud sea exactamente 1."
+      }
+    ],
+    "resultado": {
+      "latex": "\\hat{u} = 0.8\\hat{i} - 0.6\\hat{j}",
+      "texto": "El vector unitario es (0.8, -0.6, 0)."
+    },
+    "visualizacion": {
+      "tipo": "escalar",
+      "vectores": [
+        { "nombre": "v", "componentes": [4, -3, 0], "color": "#5a8a9e" },
+        { "nombre": "u_hat", "componentes": [0.8, -0.6, 0], "color": "#00f0ff" }
+      ]
+    },
+    "sugerencias": ["¿Verifica que su norma sea 1?", "¿Qué son los cosenos directores?"]
+  },
+  "q6": {
+    "habla": "Efectivamente, los vectores son ortogonales. Al calcular el producto punto obtenemos exactamente cero, lo que demuestra un ángulo de 90 grados.",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Definición del Producto Punto",
+        "latex": "\\vec{A} \\cdot \\vec{B} = A_x B_x + A_y B_y + A_z B_z",
+        "explicacion": "El producto punto produce una magnitud escalar sumando los productos de componentes homólogas."
+      },
+      {
+        "titulo": "Evaluación Numérica",
+        "latex": "\\vec{A} \\cdot \\vec{B} = (2)(-3) + (3)(2) + (-1)(0) = -6 + 6 + 0 = 0",
+        "explicacion": "Los términos opuestos se cancelan produciendo una suma nula."
+      },
+      {
+        "titulo": "Criterio de Perpendicularidad",
+        "latex": "\\vec{A} \\cdot \\vec{B} = 0 \\iff \\vec{A} \\perp \\vec{B}",
+        "explicacion": "Como el coseno de 90° es 0, un producto punto cero certifica que son ortogonales."
+      }
+    ],
+    "resultado": {
+      "latex": "\\vec{A} \\cdot \\vec{B} = 0 \\quad (\\theta = 90^\\circ)",
+      "texto": "Los vectores son estrictamente ortogonales."
+    },
+    "visualizacion": {
+      "tipo": "producto_punto",
+      "vectores": [
+        { "nombre": "A", "componentes": [2, 3, -1], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [-3, 2, 0], "color": "#ffaa00" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es su producto cruz?", "¿Cómo se calcula la proyección de A sobre B?"]
+  },
+  "q7": {
+    "habla": "El ángulo entre los vectores A y B es exactamente 60 grados. El coseno del ángulo resulta ser un medio.",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Fórmula del Coseno del Ángulo",
+        "latex": "\\cos(\\theta) = \\frac{\\vec{A} \\cdot \\vec{B}}{\\|\\vec{A}\\| \\|\\vec{B}\\|}",
+        "explicacion": "Despejamos el coseno a partir de la definición geométrica del producto escalar."
+      },
+      {
+        "titulo": "Cálculo de Términos",
+        "latex": "\\vec{A} \\cdot \\vec{B} = (1)(0) + (1)(1) + (0)(1) = 1, \\quad \\|\\vec{A}\\| = \\sqrt{2}, \\quad \\|\\vec{B}\\| = \\sqrt{2}",
+        "explicacion": "Determinamos el producto escalar y las normas individuales."
+      },
+      {
+        "titulo": "Resolución del Ángulo",
+        "latex": "\\cos(\\theta) = \\frac{1}{\\sqrt{2}\\sqrt{2}} = \\frac{1}{2} \\implies \\theta = \\arccos(0.5) = 60^\\circ",
+        "explicacion": "El ángulo notable correspondiente a un coseno de 1/2 es π/3 radianes o 60 grados."
+      }
+    ],
+    "resultado": {
+      "latex": "\\theta = 60^\\circ \\; (\\frac{\\pi}{3} \\text{ rad})",
+      "texto": "El ángulo entre los vectores es de 60°."
+    },
+    "visualizacion": {
+      "tipo": "angulo",
+      "vectores": [
+        { "nombre": "A", "componentes": [1, 1, 0], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [0, 1, 1], "color": "#ffaa00" }
+      ]
+    },
+    "sugerencias": ["¿Cómo es la regla de la mano derecha?", "¿Cuál es el vector perpendicular?"]
+  },
+  "q8": {
+    "habla": "El producto cruz da como resultado el vector (-3, 6, -3). Este nuevo vector es simultáneamente perpendicular tanto a A como a B.",
+    "emocion": "enfasis",
+    "pasos": [
+      {
+        "titulo": "Determinante Simbólico de Orden 3",
+        "latex": "\\vec{A} \\times \\vec{B} = \\begin{vmatrix} \\hat{i} & \\hat{j} & \\hat{k} \\\\ 1 & 2 & 3 \\\\ 4 & 5 & 6 \\end{vmatrix}",
+        "explicacion": "Organizamos los vectores unitarios y las componentes en una matriz de 3x3."
+      },
+      {
+        "titulo": "Desarrollo por Cofactores",
+        "latex": "\\hat{i}(12 - 15) - \\hat{j}(6 - 12) + \\hat{k}(5 - 8)",
+        "explicacion": "Calculamos los determinantes de 2x2 para cada coordenada."
+      },
+      {
+        "titulo": "Vector Resultante",
+        "latex": "\\vec{A} \\times \\vec{B} = -3\\hat{i} + 6\\hat{j} - 3\\hat{k}",
+        "explicacion": "Verificamos que el producto punto con A y con B sea cero para confirmar ortogonalidad."
+      }
+    ],
+    "resultado": {
+      "latex": "\\vec{A} \\times \\vec{B} = \\langle -3, 6, -3 \\rangle",
+      "texto": "El producto vectorial es (-3, 6, -3)."
+    },
+    "visualizacion": {
+      "tipo": "producto_cruz",
+      "vectores": [
+        { "nombre": "A", "componentes": [1, 2, 3], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [4, 5, 6], "color": "#ffaa00" },
+        { "nombre": "AxB", "componentes": [-3, 6, -3], "color": "#ff0077" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es el área del paralelogramo?", "¿Qué ocurre si calculo B x A?"]
+  },
+  "q9": {
+    "habla": "El área del paralelogramo es exactamente la magnitud del producto cruz de ambos vectores, resultando en aproximadamente 14.14 unidades cuadradas.",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Cálculo del Producto Cruz",
+        "latex": "\\vec{A} \\times \\vec{B} = \\begin{vmatrix} \\hat{i} & \\hat{j} & \\hat{k} \\\\ 3 & 0 & 2 \\\\ 1 & 4 & 0 \\end{vmatrix} = \\langle -8, 2, 12 \\rangle",
+        "explicacion": "Determinamos el vector perpendicular que contiene la información del área."
+      },
+      {
+        "titulo": "Norma del Producto Vectorial",
+        "latex": "\\text{Área} = \\|\\vec{A} \\times \\vec{B}\\| = \\sqrt{(-8)^2 + 2^2 + 12^2} = \\sqrt{64 + 4 + 144} = \\sqrt{212}",
+        "explicacion": "La magnitud del vector normal equivale geométricamente al área del paralelogramo base."
+      }
+    ],
+    "resultado": {
+      "latex": "\\text{Área} = \\sqrt{212} \\approx 14.56 \\text{ u}^2",
+      "texto": "El área del paralelogramo es de 14.56 u²."
+    },
+    "visualizacion": {
+      "tipo": "producto_cruz",
+      "vectores": [
+        { "nombre": "A", "componentes": [3, 0, 2], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [1, 4, 0], "color": "#ffaa00" },
+        { "nombre": "Normal", "componentes": [-8, 2, 12], "color": "#00ff88" }
+      ]
+    },
+    "sugerencias": ["¿Cómo calcularía el área del triángulo?", "¿Cuál es el volumen si añadimos un tercer vector?"]
+  },
+  "q10": {
+    "habla": "El área del triángulo en el espacio es exactamente la mitad del área del paralelogramo. En este caso es la mitad de la raíz de 75, aproximadamente 4.33 unidades cuadradas.",
+    "emocion": "neutral",
+    "pasos": [
+      {
+        "titulo": "Fórmula del Área Triangular",
+        "latex": "\\text{Área}_{\\Delta} = \\frac{1}{2} \\|\\vec{A} \\times \\vec{B}\\|",
+        "explicacion": "Cualquier triángulo corresponde exactamente a la mitad de un paralelogramo coplanar."
+      },
+      {
+        "titulo": "Producto Cruz",
+        "latex": "\\vec{A} \\times \\vec{B} = \\langle (2- (-3)), \\; - (4 - (-1)), \\; (6 - 1) \\rangle = \\langle 5, -5, 5 \\rangle",
+        "explicacion": "Efectuamos el determinante entre A=(2,1,-1) y B=(1,3,2)."
+      },
+      {
+        "titulo": "Cálculo de la Mitad de la Norma",
+        "latex": "\\|\\vec{A} \\times \\vec{B}\\| = \\sqrt{25 + 25 + 25} = 5\\sqrt{3} \\implies \\text{Área} = \\frac{5\\sqrt{3}}{2} \\approx 4.33",
+        "explicacion": "Simplificamos la raíz para obtener el valor numérico final."
+      }
+    ],
+    "resultado": {
+      "latex": "\\text{Área}_{\\Delta} = \\frac{5\\sqrt{3}}{2} \\approx 4.33 \\text{ u}^2",
+      "texto": "El área del triángulo es 4.33 u²."
+    },
+    "visualizacion": {
+      "tipo": "producto_cruz",
+      "vectores": [
+        { "nombre": "A", "componentes": [2, 1, -1], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [1, 3, 2], "color": "#ffaa00" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es el plano que contiene este triángulo?", "¿Son ortogonales los vectores?"]
+  },
+  "q11": {
+    "habla": "La proyección vectorial de A sobre B es la sombra ortogonal que proyecta A en la dirección de B. Su valor es siete sextos del vector B.",
+    "emocion": "enfasis",
+    "pasos": [
+      {
+        "titulo": "Fórmula de Proyección Vectorial",
+        "latex": "\\text{proy}_{\\vec{B}}(\\vec{A}) = \\left( \\frac{\\vec{A} \\cdot \\vec{B}}{\\|\\vec{B}\\|^2} \\right) \\vec{B}",
+        "explicacion": "El escalar entre paréntesis modula la longitud según la alineación de ambos vectores."
+      },
+      {
+        "titulo": "Evaluación de Términos",
+        "latex": "\\vec{A} \\cdot \\vec{B} = (2)(1) + (3)(1) + (1)(2) = 7, \\quad \\|\\vec{B}\\|^2 = 1^2 + 1^2 + 2^2 = 6",
+        "explicacion": "Calculamos el producto punto de numerador y el cuadrado de la norma del vector base."
+      },
+      {
+        "titulo": "Vector Proyección Final",
+        "latex": "\\text{proy}_{\\vec{B}}(\\vec{A}) = \\frac{7}{6}\\langle 1, 1, 2 \\rangle = \\left\\langle \\frac{7}{6}, \\; \\frac{7}{6}, \\; \\frac{7}{3} \\right\\rangle",
+        "explicacion": "Multiplicamos el escalar 7/6 por cada componente del vector B."
+      }
+    ],
+    "resultado": {
+      "latex": "\\text{proy}_{\\vec{B}}(\\vec{A}) = \\langle 1.17, \\; 1.17, \\; 2.33 \\rangle",
+      "texto": "La proyección es (7/6, 7/6, 7/3)."
+    },
+    "visualizacion": {
+      "tipo": "proyeccion",
+      "vectores": [
+        { "nombre": "A", "componentes": [2, 3, 1], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [1, 1, 2], "color": "#ffaa00" },
+        { "nombre": "Proy", "componentes": [1.167, 1.167, 2.333], "color": "#00ff88" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es la componente ortogonal?", "¿Cuál es la proyección escalar?"]
+  },
+  "q12": {
+    "habla": "El volumen del paralelepípedo es el valor absoluto del producto triple escalar, lo que da un total de 16 unidades cúbicas.",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Fórmula del Producto Triple Escalar",
+        "latex": "V = |\\vec{A} \\cdot (\\vec{B} \\times \\vec{C})| = \\left| \\det \\begin{pmatrix} 1 & 0 & 2 \\\\ 0 & 2 & 3 \\\\ 3 & 1 & 0 \\end{pmatrix} \\right|",
+        "explicacion": "El determinante de la matriz formada por los tres vectores representa el volumen con signo."
+      },
+      {
+        "titulo": "Desarrollo del Determinante",
+        "latex": "1(0 - 3) - 0(0 - 9) + 2(0 - 6) = -3 - 12 = -15",
+        "explicacion": "Calculamos el determinante mediante la primera fila."
+      },
+      {
+        "titulo": "Volumen Positivo",
+        "latex": "V = |-15| = 15 \\text{ u}^3",
+        "explicacion": "Tomamos el valor absoluto porque un volumen geométrico es siempre una cantidad positiva."
+      }
+    ],
+    "resultado": {
+      "latex": "V = 15 \\text{ unidades cúbicas}",
+      "texto": "El volumen del paralelepípedo es de 15 u³."
+    },
+    "visualizacion": {
+      "tipo": "suma",
+      "vectores": [
+        { "nombre": "A", "componentes": [1, 0, 2], "color": "#00f0ff" },
+        { "nombre": "B", "componentes": [0, 2, 3], "color": "#ffaa00" },
+        { "nombre": "C", "componentes": [3, 1, 0], "color": "#00ff88" }
+      ]
+    },
+    "sugerencias": ["¿Son linealmente dependientes?", "¿Qué ocurre si el volumen es 0?"]
+  },
+  "q13": {
+    "habla": "La recta en el espacio queda unívocamente determinada por su punto de paso y su vector director. Sus ecuaciones paramétricas son x = 1 + 2t, y = -2 + 4t, z = 3 - t.",
+    "emocion": "neutral",
+    "pasos": [
+      {
+        "titulo": "Ecuación Vectorial de la Recta",
+        "latex": "\\vec{r}(t) = P_0 + t\\vec{v} = \\langle 1, -2, 3 \\rangle + t\\langle 2, 4, -1 \\rangle",
+        "explicacion": "El parámetro t recorre todos los números reales generando todos los puntos de la recta."
+      },
+      {
+        "titulo": "Ecuaciones Paramétricas",
+        "latex": "x = 1 + 2t, \\quad y = -2 + 4t, \\quad z = 3 - t",
+        "explicacion": "Desglosamos cada coordenada en función del parámetro real t."
+      },
+      {
+        "titulo": "Ecuaciones Simétricas",
+        "latex": "\\frac{x - 1}{2} = \\frac{y + 2}{4} = \\frac{z - 3}{-1}",
+        "explicacion": "Despejamos el parámetro t de cada ecuación e igualamos las expresiones."
+      }
+    ],
+    "resultado": {
+      "latex": "\\frac{x - 1}{2} = \\frac{y + 2}{4} = \\frac{3 - z}{1}",
+      "texto": "Ecuación vectorial: (1, -2, 3) + t(2, 4, -1)."
+    },
+    "visualizacion": {
+      "tipo": "recta",
+      "vectores": [
+        { "nombre": "P0", "componentes": [1, -2, 3], "color": "#00f0ff" },
+        { "nombre": "v_dir", "componentes": [2, 4, -1], "color": "#ffaa00" }
+      ]
+    },
+    "sugerencias": ["¿Cómo saber si un punto pertenece a la recta?", "¿Cuál es el plano perpendicular?"]
+  },
+  "q14": {
+    "habla": "La ecuación del plano se obtiene igualando a cero el producto punto entre el vector normal y el vector del punto genérico. La ecuación general es 3x + 2y - 5z + 16 = 0.",
+    "emocion": "enfasis",
+    "pasos": [
+      {
+        "titulo": "Condición de Ortogonalidad del Plano",
+        "latex": "\\vec{n} \\cdot (P - P_0) = 0 \\implies A(x - x_0) + B(y - y_0) + C(z - z_0) = 0",
+        "explicacion": "Cualquier segmento contenido en el plano es rigurosamente perpendicular al vector normal."
+      },
+      {
+        "titulo": "Sustitución de Valores",
+        "latex": "3(x - 2) + 2(y - (-1)) - 5(z - 4) = 0",
+        "explicacion": "Insertamos las coordenadas del punto P(2, -1, 4) y los coeficientes normales (3, 2, -5)."
+      },
+      {
+        "titulo": "Ecuación General Simplificada",
+        "latex": "3x - 6 + 2y + 2 - 5z + 20 = 0 \\implies 3x + 2y - 5z + 16 = 0",
+        "explicacion": "Agrupamos las constantes en el término independiente D = 16."
+      }
+    ],
+    "resultado": {
+      "latex": "3x + 2y - 5z + 16 = 0",
+      "texto": "La ecuación del plano es 3x + 2y - 5z + 16 = 0."
+    },
+    "visualizacion": {
+      "tipo": "plano",
+      "vectores": [
+        { "nombre": "Normal", "componentes": [3, 2, -5], "color": "#00ff88" },
+        { "nombre": "Punto", "componentes": [2, -1, 4], "color": "#00f0ff" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es la distancia del origen al plano?", "¿Cómo encontrar un plano paralelo?"]
+  },
+  "q15": {
+    "habla": "La distancia mínima del punto P al plano es exactamente un tercio de unidad, aproximadamente 0.33.",
+    "emocion": "feliz",
+    "pasos": [
+      {
+        "titulo": "Fórmula de Distancia Punto a Plano",
+        "latex": "d = \\frac{|A x_0 + B y_0 + C z_0 + D|}{\\sqrt{A^2 + B^2 + C^2}}",
+        "explicacion": "Evaluamos el punto en la ecuación del plano y dividimos entre la norma del vector normal."
+      },
+      {
+        "titulo": "Sustitución del Punto P(1, 2, 3)",
+        "latex": "|2(1) - 1(2) + 2(3) - 5| = |2 - 2 + 6 - 5| = |1| = 1",
+        "explicacion": "El numerador representa el desfase algebraico del punto con respecto al plano."
+      },
+      {
+        "titulo": "Norma del Vector Normal",
+        "latex": "\\|\\vec{n}\\| = \\sqrt{2^2 + (-1)^2 + 2^2} = \\sqrt{4 + 1 + 4} = \\sqrt{9} = 3",
+        "explicacion": "Calculamos la longitud del vector normal n = (2, -1, 2)."
+      },
+      {
+        "titulo": "Distancia Calculada",
+        "latex": "d = \\frac{1}{3} \\approx 0.333 \\text{ unidades}",
+        "explicacion": "Obtenemos la distancia ortogonal más corta entre el punto y el plano."
+      }
+    ],
+    "resultado": {
+      "latex": "d = \\frac{1}{3} \\approx 0.333",
+      "texto": "La distancia del punto al plano es 1/3 (0.333 u)."
+    },
+    "visualizacion": {
+      "tipo": "plano",
+      "vectores": [
+        { "nombre": "P", "componentes": [1, 2, 3], "color": "#ffaa00" },
+        { "nombre": "n", "componentes": [2, -1, 2], "color": "#00f0ff" }
+      ]
+    },
+    "sugerencias": ["¿Cuál es el punto más cercano en el plano?", "¿Qué pasa si la distancia es 0?"]
+  }
+}
