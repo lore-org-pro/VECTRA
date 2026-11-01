@@ -43,6 +43,15 @@ export class SpeechRecognitionService {
     this.language = 'es-MX';
     this.minAudioMs = 280;
 
+    // —— Cancelación de Ruido de Aula y Puerta de Ruido Digital (Noise Gate) ——
+    this.classroomMode = true; // Activo por defecto: máxima inmunidad a murmullos escolares
+    this.noiseGateThreshold = 0.045; // Umbral calibrado (se autocalibra con el ruido de fondo)
+    this.noiseGateGainNode = null;
+    this.noiseCalibrationSamples = [];
+    this.speechFramesCount = 0;
+    this.isGateOpen = false;
+    this.onGateStateChange = null; // (open: boolean)
+
     this._initWebSpeech();
     this.refreshDevices();
 
@@ -250,7 +259,7 @@ export class SpeechRecognitionService {
   }
 
   // ──────────────────────────────────────────────
-  // 4. Cadena DSP de Audio y Medidor VU en Tiempo Real
+  // 4. Cadena DSP de Audio y Puerta de Ruido Digital (Noise Gate)
   // ──────────────────────────────────────────────
   _startAudioDSP() {
     try {
@@ -260,43 +269,68 @@ export class SpeechRecognitionService {
       this.audioCtx = new AudioCtx();
       const source = this.audioCtx.createMediaStreamSource(this.stream);
 
-      // A) Filtro Paso Alto a 85Hz: elimina zumbidos de aire acondicionado, fricción y murmullos graves
-      const highpass = this.audioCtx.createBiquadFilter();
-      highpass.type = 'highpass';
-      highpass.frequency.value = 85;
+      // A) Filtro Paso Alto Etapa 1 (115Hz): suprime zumbidos de aire acondicionado y resonancias graves
+      const highpass1 = this.audioCtx.createBiquadFilter();
+      highpass1.type = 'highpass';
+      highpass1.frequency.value = 115;
+      highpass1.Q.value = 0.707;
 
-      // B) Filtro Peaking a 2.4kHz: realza la presencia y claridad de la voz humana
+      // B) Filtro Paso Alto Etapa 2 (135Hz): pendiente empinada de 24dB/octava contra ruido de pasos y mesas
+      const highpass2 = this.audioCtx.createBiquadFilter();
+      highpass2.type = 'highpass';
+      highpass2.frequency.value = 135;
+      highpass2.Q.value = 0.707;
+
+      // C) Filtro Paso Bajo (3800Hz): elimina siseos, tecleos y murmullos agudos lejanos del salón
+      const lowpass = this.audioCtx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 3800;
+      lowpass.Q.value = 0.8;
+
+      // D) Filtro Peaking a 2.6kHz: realza formantes vocales y articulación de consonantes en español
       const voiceBoost = this.audioCtx.createBiquadFilter();
       voiceBoost.type = 'peaking';
-      voiceBoost.frequency.value = 2400;
-      voiceBoost.Q.value = 1.0;
-      voiceBoost.gain.value = 3.0;
+      voiceBoost.frequency.value = 2600;
+      voiceBoost.Q.value = 1.3;
+      voiceBoost.gain.value = 4.5;
 
-      // C) Compresor dinámico: nivela volumen y atenúa ruidos de fondo lejanos
+      // E) Compresor dinámico: nivela la voz cercana y comprime picos repentinos
       const compressor = this.audioCtx.createDynamicsCompressor();
-      compressor.threshold.setValueAtTime(-26, this.audioCtx.currentTime);
-      compressor.knee.setValueAtTime(10, this.audioCtx.currentTime);
-      compressor.ratio.setValueAtTime(4, this.audioCtx.currentTime);
+      compressor.threshold.setValueAtTime(-24, this.audioCtx.currentTime);
+      compressor.knee.setValueAtTime(8, this.audioCtx.currentTime);
+      compressor.ratio.setValueAtTime(4.5, this.audioCtx.currentTime);
       compressor.attack.setValueAtTime(0.003, this.audioCtx.currentTime);
-      compressor.release.setValueAtTime(0.25, this.audioCtx.currentTime);
+      compressor.release.setValueAtTime(0.20, this.audioCtx.currentTime);
 
-      // D) Analizador VU
+      // F) Puerta de Ruido Digital (Noise Gate): atenúa en 98% el ruido cuando nadie habla de cerca
+      this.noiseGateGainNode = this.audioCtx.createGain();
+      this.noiseGateGainNode.gain.setValueAtTime(0.02, this.audioCtx.currentTime);
+
+      // G) Analizador VU
       this.analyser = this.audioCtx.createAnalyser();
       this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = 0.3;
+      this.analyser.smoothingTimeConstant = 0.25;
 
-      // E) Destino de stream procesado para alimentar MediaRecorder
+      // H) Destino de stream procesado y limpio para alimentar MediaRecorder
       const dest = this.audioCtx.createMediaStreamDestination();
 
-      source.connect(highpass);
-      highpass.connect(voiceBoost);
+      // Cadena en serie: source -> highpass1 -> highpass2 -> lowpass -> voiceBoost -> compressor -> noiseGate -> analyser -> dest
+      source.connect(highpass1);
+      highpass1.connect(highpass2);
+      highpass2.connect(lowpass);
+      lowpass.connect(voiceBoost);
       voiceBoost.connect(compressor);
-      compressor.connect(this.analyser);
-      compressor.connect(dest);
+      compressor.connect(this.noiseGateGainNode);
+      this.noiseGateGainNode.connect(this.analyser);
+      this.noiseGateGainNode.connect(dest);
 
       this.processedStream = dest.stream;
 
       const buffer = new Uint8Array(this.analyser.frequencyBinCount);
+      this.noiseCalibrationSamples = [];
+      this.speechFramesCount = 0;
+      this.isGateOpen = false;
+      const dspStartTime = Date.now();
 
       const checkVolume = () => {
         if (!this.isListening) return;
@@ -305,6 +339,39 @@ export class SpeechRecognitionService {
         for (let i = 0; i < buffer.length; i++) sum += buffer[i];
         const avg = sum / buffer.length;
         const normalized = Math.min(1.0, Math.max(0.0, avg / 128.0));
+
+        const elapsed = Date.now() - dspStartTime;
+
+        // Autocalibración del ruido ambiental del aula durante los primeros 120ms
+        if (elapsed < 120) {
+          this.noiseCalibrationSamples.push(normalized);
+        } else if (this.noiseCalibrationSamples.length > 0) {
+          const avgNoise = this.noiseCalibrationSamples.reduce((a, b) => a + b, 0) / this.noiseCalibrationSamples.length;
+          // El umbral de la puerta se coloca un 55% por encima del ruido ambiental medido
+          this.noiseGateThreshold = Math.max(0.035, Math.min(0.22, avgNoise * 1.55));
+          this.noiseCalibrationSamples = [];
+          console.log(`[SpeechRec] 🛡️ Ruido de fondo aula: ${(avgNoise * 100).toFixed(1)}% | Umbral puerta: ${(this.noiseGateThreshold * 100).toFixed(1)}%`);
+        }
+
+        // Control adaptativo de la Puerta de Ruido (Noise Gate)
+        if (normalized >= this.noiseGateThreshold) {
+          this.speechFramesCount++;
+          if (this.noiseGateGainNode) {
+            this.noiseGateGainNode.gain.setTargetAtTime(1.0, this.audioCtx.currentTime, 0.008);
+          }
+          if (!this.isGateOpen) {
+            this.isGateOpen = true;
+            if (this.onGateStateChange) this.onGateStateChange(true);
+          }
+        } else {
+          if (this.noiseGateGainNode) {
+            this.noiseGateGainNode.gain.setTargetAtTime(0.02, this.audioCtx.currentTime, 0.06);
+          }
+          if (this.isGateOpen) {
+            this.isGateOpen = false;
+            if (this.onGateStateChange) this.onGateStateChange(false);
+          }
+        }
 
         if (this.onAudioLevel) {
           this.onAudioLevel(normalized);
@@ -371,10 +438,14 @@ export class SpeechRecognitionService {
   async _processAudio() {
     const elapsed = Date.now() - this.startTime;
 
-    if (this.audioChunks.length === 0 || elapsed < this.minAudioMs) {
+    // Si no hubo energía vocal por encima del umbral de ruido del aula, descartar ruido silenciosamente
+    if (this.audioChunks.length === 0 || elapsed < this.minAudioMs || this.speechFramesCount < 3) {
+      console.log(`[SpeechRec] 🔇 Señal descartada: solo se detectó ruido ambiental de fondo (${this.speechFramesCount} frames de voz).`);
       const wsText = this.webSpeechTranscript.trim();
-      if (wsText && this.onFinalTranscript) {
+      if (wsText && this.speechFramesCount >= 2 && this.onFinalTranscript) {
         this.onFinalTranscript(wsText);
+      } else if (this.onError) {
+        this.onError('ruido_ambiental_filtrado');
       }
       return;
     }

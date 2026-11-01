@@ -473,14 +473,13 @@ export default function App() {
       // mic_denied o insecure_origin: mostrar aviso contextual
       if (err === 'mic_denied' || err === 'not-allowed' || err === 'insecure_origin') {
         setBraveMicNotice(true);
-      } else if (err === 'empty_transcript') {
-        // En aulas ruidosas: notificar sutilmente que no se captó la voz para que el usuario no crea que se congeló
-        setVectraSubtitle('No logré distinguir tu voz entre el ruido del aula. Acerca el micrófono y vuelve a hablar.');
-        setEmotion('duda');
+      } else if (err === 'ruido_ambiental_filtrado' || err === 'empty_transcript') {
+        // En aulas ruidosas: notificar sutilmente que la puerta de ruido bloqueó el ruido exterior
+        setVectraSubtitle('🛡️ Ruido de fondo filtrado. Habla más cerca de tu micrófono de solapa.');
+        setEmotion('neutral');
         setTimeout(() => {
-          setVectraSubtitle((prev) => (prev.startsWith('No logré') ? '' : prev));
-          setEmotion('neutral');
-        }, 3500);
+          setVectraSubtitle((prev) => (prev.startsWith('🛡️ Ruido') ? '' : prev));
+        }, 3000);
       } else if (err === 'whisper_failed') {
         setVectraSubtitle('Conexión de voz inestable (hotspot móvil). Intenta de nuevo o escribe tu consulta.');
         setEmotion('duda');

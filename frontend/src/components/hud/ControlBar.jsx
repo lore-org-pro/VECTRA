@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Send, MessageSquare, Radio, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Send, MessageSquare, Radio, Volume2, ShieldCheck } from 'lucide-react';
 import { soundFX } from '../../utils/audioFX';
 
 export default function ControlBar({
@@ -102,6 +102,13 @@ export default function ControlBar({
                 MIC EXTERNO
               </span>
             )}
+            <span 
+              className="inline-flex items-center gap-1 bg-cyan-100 text-cyan-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-cyan-300"
+              title="Cancelación activa de murmullos y puerta de ruido digital de aula activa"
+            >
+              <ShieldCheck className="w-2.5 h-2.5 text-cyan-600" />
+              ANTIRRUIDO AULA
+            </span>
             {/* Selector de micrófono si hay más de 1 conectado */}
             {availableMics.length > 1 && (
               <select
