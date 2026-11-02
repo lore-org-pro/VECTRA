@@ -26,7 +26,12 @@ export class ReasoningEngine {
     let verificacion = 'Coherencia lógica y rigor conceptual';
 
     if (norm.includes('vector') || norm.includes('vectores') || norm.includes('cruz') || norm.includes('punto') || norm.includes('norma')) {
-      const is2D = (Array.isArray(parsedNumbers) && (parsedNumbers.length === 4 || parsedNumbers.length === 2));
+      let nums = Array.isArray(parsedNumbers) && parsedNumbers.length > 0 ? parsedNumbers : [];
+      if (nums.length === 0) {
+        const matches = norm.match(/-?\d+(?:\.\d+)?/g);
+        if (matches) nums = matches.map(Number);
+      }
+      const is2D = (Array.isArray(nums) && (nums.length === 4 || nums.length === 2));
       dominio = is2D ? 'Álgebra vectorial en ℝ²' : 'Álgebra vectorial en ℝ³';
       estrategia = is2D
         ? 'Extracción de componentes en el plano cartesiano, suma analítica y módulo euclidiano'
