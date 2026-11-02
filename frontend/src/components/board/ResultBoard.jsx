@@ -84,11 +84,10 @@ export default function ResultBoard({
     const clean = cleanTextForDisplay(res.texto || res.latex || '');
     const tupleMatch = clean.match(/\((-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)(?:\s*,\s*(-?\d+(?:\.\d+)?))?\)/);
     if (tupleMatch) {
-      return [
-        parseFloat(tupleMatch[1]),
-        parseFloat(tupleMatch[2]),
-        tupleMatch[3] !== undefined ? parseFloat(tupleMatch[3]) : 0
-      ];
+      if (tupleMatch[3] !== undefined && tupleMatch[3] !== '') {
+        return [parseFloat(tupleMatch[1]), parseFloat(tupleMatch[2]), parseFloat(tupleMatch[3])];
+      }
+      return [parseFloat(tupleMatch[1]), parseFloat(tupleMatch[2])];
     }
     return null;
   })();
@@ -96,20 +95,25 @@ export default function ResultBoard({
   // Cálculo de métricas analíticas
   const metrics = (() => {
     if (!resultVec || !Array.isArray(resultVec)) return null;
-    const [x, y, z] = resultVec;
-    const magSq = x * x + y * y + z * z;
+    const is2D = resultVec.length === 2;
+    const x = resultVec[0];
+    const y = resultVec[1];
+    const z = is2D ? undefined : (resultVec[2] || 0);
+    const magSq = is2D ? (x * x + y * y) : (x * x + y * y + z * z);
     const mag = Math.sqrt(magSq);
     const round2 = (n) => Math.round(n * 100) / 100;
 
-    let unitVec = [0, 0, 0];
+    let unitVec = is2D ? [0, 0] : [0, 0, 0];
     if (mag > 0.00001) {
-      unitVec = [round2(x / mag), round2(y / mag), round2(z / mag)];
+      unitVec = is2D
+        ? [round2(x / mag), round2(y / mag)]
+        : [round2(x / mag), round2(y / mag), round2(z / mag)];
     }
 
     // Ángulos directores
     const alpha = mag > 0 ? round2(Math.acos(Math.max(-1, Math.min(1, x / mag))) * (180 / Math.PI)) : 0;
     const beta = mag > 0 ? round2(Math.acos(Math.max(-1, Math.min(1, y / mag))) * (180 / Math.PI)) : 0;
-    const gamma = mag > 0 ? round2(Math.acos(Math.max(-1, Math.min(1, z / mag))) * (180 / Math.PI)) : 0;
+    const gamma = (!is2D && mag > 0) ? round2(Math.acos(Math.max(-1, Math.min(1, z / mag))) * (180 / Math.PI)) : null;
 
     // Notación canónica limpia (sin "+ -", con coeficientes 1 simplificados)
     const parts = [];
@@ -125,7 +129,7 @@ export default function ResultBoard({
         parts.push(y > 0 ? `+ ${coeff}\\hat{j}` : `- ${coeff}\\hat{j}`);
       }
     }
-    if (z !== 0) {
+    if (!is2D && z !== undefined && z !== null && z !== 0) {
       const absZ = Math.abs(z);
       const coeff = absZ === 1 ? '' : absZ;
       if (parts.length === 0) {
@@ -137,15 +141,16 @@ export default function ResultBoard({
     const canonical = parts.length > 0 ? parts.join(' ') : '0\\hat{i}';
 
     return {
-      coords: `(${x}, ${y}, ${z})`,
-      tuple: `\\langle ${x}, ${y}, ${z} \\rangle`,
+      coords: is2D ? `(${x}, ${y})` : `(${x}, ${y}, ${z})`,
+      tuple: is2D ? `\\langle ${x}, ${y} \\rangle` : `\\langle ${x}, ${y}, ${z} \\rangle`,
       canonical,
       magSq,
       mag: round2(mag),
-      unitVec: `\\langle ${unitVec[0]}, ${unitVec[1]}, ${unitVec[2]} \\rangle`,
+      unitVec: is2D ? `\\langle ${unitVec[0]}, ${unitVec[1]} \\rangle` : `\\langle ${unitVec[0]}, ${unitVec[1]}, ${unitVec[2]} \\rangle`,
       alpha,
       beta,
-      gamma
+      gamma,
+      is2D
     };
   })();
 
@@ -323,7 +328,7 @@ export default function ResultBoard({
             {/* 1. Notación Canónica */}
             <div className="p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 flex flex-col justify-between shadow-md">
               <div className="flex items-center justify-between text-[11px] font-mono text-emerald-300 font-bold uppercase tracking-wider mb-1">
-                <span>Base Canónica (i, j, k)</span>
+                <span>Base Canónica ({metrics.is2D ? 'i, j' : 'i, j, k'})</span>
                 <Layers className="w-3 h-3 text-emerald-400" />
               </div>
               <div className="py-1 text-center overflow-x-auto">
@@ -344,7 +349,7 @@ export default function ResultBoard({
                 <GoldChalkKaTeX math={`|\\vec{R}| = \\sqrt{${metrics.magSq}} \\approx ${metrics.mag}`} block={false} />
               </div>
               <span className="text-[10px] text-amber-200/70 font-mono text-center">
-                Norma euclidiana en ℝ³
+                Norma euclidiana en {metrics.is2D ? 'ℝ²' : 'ℝ³'}
               </span>
             </div>
 
@@ -374,28 +379,30 @@ export default function ResultBoard({
             <div className="flex items-center gap-4 text-emerald-100">
               <span><strong className="text-red-400">α (con X):</strong> {metrics.alpha}°</span>
               <span><strong className="text-emerald-400">β (con Y):</strong> {metrics.beta}°</span>
-              <span><strong className="text-blue-400">γ (con Z):</strong> {metrics.gamma}°</span>
+              {!metrics.is2D && metrics.gamma !== null && (
+                <span><strong className="text-blue-400">γ (con Z):</strong> {metrics.gamma}°</span>
+              )}
             </div>
           </div>
         )}
 
-        {/* D) EXPLICACIÓN MAGISTRAL TIPO HARVARD */}
+        {/* D) EXPLICACIÓN DIDÁCTICA (FÁCIL DE ENTENDER & CÁTEDRA) */}
         <div className="p-3 sm:p-4 rounded-xl bg-emerald-950/90 border border-amber-400/50 shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-amber-500/30">
+          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-amber-500/30 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-amber-300" />
+              <Sparkles className="w-4 h-4 text-amber-300" />
               <span className="text-xs sm:text-sm font-bold text-amber-200 tracking-wide font-mono uppercase">
-                Explicación Magistral (Cátedra Harvard)
+                {res.explicacionFacil ? 'Explicación Sencilla (Fácil de entender)' : 'Explicación Magistral (Cátedra Harvard)'}
               </span>
             </div>
             {onRepeatAudio && (
               <button
                 onClick={() => {
                   soundFX.playClick();
-                  onRepeatAudio(harvardLecture);
+                  onRepeatAudio(res.explicacionFacil || harvardLecture);
                 }}
                 className="px-2.5 py-0.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-all active:scale-95"
-                title="Escuchar locución completa del profesor"
+                title="Escuchar locución completa"
               >
                 <Volume2 className="w-3 h-3 text-amber-300" />
                 <span>Escuchar Explicación</span>
@@ -403,7 +410,7 @@ export default function ResultBoard({
             )}
           </div>
           <p className="text-xs sm:text-sm text-emerald-50 leading-relaxed font-sans">
-            {harvardLecture}
+            {res.explicacionFacil || harvardLecture}
           </p>
         </div>
 

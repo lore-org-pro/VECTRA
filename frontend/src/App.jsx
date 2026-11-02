@@ -971,9 +971,9 @@ export default function App() {
                     <VectorScene
                       visualizationData={visualizationData}
                       theme={theme}
-                      harvardLecture={procedureData?.resultado?.explicacionHarvard || speechText}
-                      onSpeakLecture={() => {
-                        const textToSpeak = procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto || speechText;
+                      harvardLecture={procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || speechText}
+                      onSpeakLecture={(customText) => {
+                        const textToSpeak = customText || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto || speechText;
                         if (textToSpeak) {
                           setVectraSubtitle(textToSpeak);
                           fetchTTS(textToSpeak)

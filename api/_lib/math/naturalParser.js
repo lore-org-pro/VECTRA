@@ -70,14 +70,17 @@ export class NaturalVectorParser {
     }
 
     // 1. Coordenadas explícitas con corchetes, paréntesis, llaves o signos angulares
-    // Ej: (1, 2, 3) | <1, -4, 2> | [0, 5, -2] | (1; 2; 3) | (1 2 3)
+    // Ej: (1, 2, 3) | <1, -4, 2> | [0, 5, -2] | (1; 2; 3) | (1 2 3) | (1, -4)
     const bracketRegex = /[\(\<\[\{]\s*(-?\d+(?:\.\d+)?)(?:[\s,;]+(-?\d+(?:\.\d+)?))(?:[\s,;]+(-?\d+(?:\.\d+)?))?\s*[\)\>\]\}]/g;
     let match;
     while ((match = bracketRegex.exec(text)) !== null) {
       const x = parseFloat(match[1]);
       const y = parseFloat(match[2]);
-      const z = match[3] !== undefined ? parseFloat(match[3]) : 0;
-      vectors.push([x, y, z]);
+      if (match[3] !== undefined && match[3] !== '') {
+        vectors.push([x, y, parseFloat(match[3])]);
+      } else {
+        vectors.push([x, y]); // 2D estricto: conserva exactamente la dimensión de entrada
+      }
     }
 
     if (vectors.length >= 1) {
@@ -89,6 +92,7 @@ export class NaturalVectorParser {
       .filter(m => m[0].trim().length > 1 && (m[0].includes('i') || m[0].includes('j') || m[0].includes('k')));
 
     if (ijkMatches.length > 0) {
+      const hasAnyK = ijkMatches.some(m => (m[0].match(/([+-]?\s*\d*(?:\.\d+)?)\s*k/i) || [])[1] !== undefined);
       for (const m of ijkMatches) {
         const parseCoeff = (str) => {
           if (!str) return 0;
@@ -101,7 +105,11 @@ export class NaturalVectorParser {
         const jCoeff = (m[0].match(/([+-]?\s*\d*(?:\.\d+)?)\s*j/i) || [])[1];
         const kCoeff = (m[0].match(/([+-]?\s*\d*(?:\.\d+)?)\s*k/i) || [])[1];
         if (iCoeff !== undefined || jCoeff !== undefined || kCoeff !== undefined) {
-          vectors.push([parseCoeff(iCoeff), parseCoeff(jCoeff), parseCoeff(kCoeff)]);
+          if (hasAnyK) {
+            vectors.push([parseCoeff(iCoeff), parseCoeff(jCoeff), parseCoeff(kCoeff)]);
+          } else {
+            vectors.push([parseCoeff(iCoeff), parseCoeff(jCoeff)]);
+          }
         }
       }
       if (vectors.length > 0) return vectors;
@@ -121,8 +129,8 @@ export class NaturalVectorParser {
 
       const vCandidates = rawTuples.map(nums => {
         if (nums.length >= 3) return nums.slice(0, 3);
-        if (nums.length === 2) return [nums[0], nums[1], 0];
-        if (nums.length === 1) return [nums[0], 0, 0];
+        if (nums.length === 2) return [nums[0], nums[1]]; // Conserva 2D sin agregar 0 al final
+        if (nums.length === 1) return [nums[0]];
         return null;
       }).filter(Boolean);
 
@@ -141,10 +149,15 @@ export class NaturalVectorParser {
       ];
     }
     if (allNumbers.length === 4) {
+      // 2 vectores de 2 dimensiones cada uno en R^2
       return [
-        [allNumbers[0], allNumbers[1], 0],
-        [allNumbers[2], allNumbers[3], 0]
+        [allNumbers[0], allNumbers[1]],
+        [allNumbers[2], allNumbers[3]]
       ];
+    }
+    if (allNumbers.length === 2) {
+      // 1 vector de 2 dimensiones
+      return [[allNumbers[0], allNumbers[1]]];
     }
     if (allNumbers.length === 9) {
       return [

@@ -6,7 +6,9 @@ import * as math from 'mathjs';
 export class VectorEngine {
   // 1. Suma de vectores
   add(v1, v2) {
-    const dim = Math.max(v1.length, v2.length, 3);
+    if (v1 && v2 && v1.length === 2 && v2.length === 2) {
+      return [v1[0] + v2[0], v1[1] + v2[1]];
+    }
     const a = this.pad3D(v1);
     const b = this.pad3D(v2);
     return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -14,6 +16,9 @@ export class VectorEngine {
 
   // 2. Resta de vectores
   subtract(v1, v2) {
+    if (v1 && v2 && v1.length === 2 && v2.length === 2) {
+      return [v1[0] - v2[0], v1[1] - v2[1]];
+    }
     const a = this.pad3D(v1);
     const b = this.pad3D(v2);
     return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -33,12 +38,15 @@ export class VectorEngine {
   // 5. Vector unitario (normalización)
   unitVector(v) {
     const mag = this.magnitude(v);
-    if (mag === 0) return [0, 0, 0];
+    if (mag === 0) return v.length === 2 ? [0, 0] : [0, 0, 0];
     return v.map((comp) => comp / mag);
   }
 
   // 6. Producto punto (escalar)
   dotProduct(v1, v2) {
+    if (v1 && v2 && v1.length === 2 && v2.length === 2) {
+      return v1[0] * v2[0] + v1[1] * v2[1];
+    }
     const a = this.pad3D(v1);
     const b = this.pad3D(v2);
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];

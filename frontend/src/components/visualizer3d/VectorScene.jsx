@@ -355,6 +355,87 @@ function createStarFieldPoints(count = 300, maxMag = 10) {
 }
 
 // ══════════════════════════════════════════════
+// Explicación Didáctica Nivel Niño de 5 Años (ELI5)
+// ══════════════════════════════════════════════
+function generateELI5Explanation(visData, hudInfo) {
+  const vecs = visData?.vectores || [];
+  const tipo = visData?.tipo || 'suma';
+  if (vecs.length === 0) {
+    return '¡Hola! En este espacio interactivo puedes ver y rotar vectores. Un vector es como una flecha mágica que te dice hacia dónde ir y cuántos pasos dar.';
+  }
+
+  const is2D = vecs.every(v => {
+    const raw = v?.componentes || v?.coordenadas || v?.coords;
+    return Array.isArray(raw) && raw.length === 2;
+  });
+
+  const vA = vecs[0];
+  const vB = vecs[1];
+  const vR = vecs.find(v => v.nombre === 'R' || v.nombre === 'Resultante' || v.isResult) || vecs[vecs.length - 1];
+
+  const formatCoords = (comp) => {
+    if (!comp) return '';
+    return comp.length === 2
+      ? `${comp[0]} en la línea roja X y ${comp[1]} en la línea verde Y`
+      : `${comp[0]} en X, ${comp[1]} en Y y ${comp[2]} en Z`;
+  };
+
+  const formatTupleShort = (comp) => {
+    if (!comp) return '';
+    return `(${comp.slice(0, is2D ? 2 : 3).join(', ')})`;
+  };
+
+  if (tipo === 'suma' && vecs.length >= 2) {
+    const coordsA = vA.componentes || [0, 0];
+    const coordsB = vB.componentes || [0, 0];
+    const coordsR = vR.componentes || [0, 0];
+
+    const anglePart = hudInfo?.angleDeg !== null && hudInfo?.angleDeg !== undefined
+      ? ` Forman entre ellas una abertura o ángulo de ${hudInfo.angleDeg} grados.`
+      : '';
+
+    return `¡Te explico todo lo que ves en pantalla como si fueras un niño de 5 años! ` +
+      `Imagina que el suelo con la rejilla es un patio de juegos, y el punto brillante en el centro donde nacen todas las flechas es tu casa, el punto de partida (cero, cero). ` +
+      `Cada flecha de color es un vector: una flecha que te dice hacia dónde moverte y cuántos pasos dar. ` +
+      `La flecha azul es el vector A: te dice que camines ${formatCoords(coordsA)}, llegando hasta ${formatTupleShort(coordsA)}. ` +
+      `La flecha naranja es el vector B: te dice que camines ${formatCoords(coordsB)}. ` +
+      `${anglePart} ` +
+      `¿Y ves esa gran flecha verde brillante? ¡Esa es la campeona, la resultante R! ` +
+      `Es el atajo mágico: si caminas por la flecha azul y luego sigues el camino de la flecha naranja por las líneas punteadas, llegarás exactamente a donde apunta la flecha verde en ${formatTupleShort(coordsR)}. ` +
+      `¡Sumar vectores no es más que encontrar ese atajo directo desde el inicio hasta la meta final!`;
+  }
+
+  if (tipo === 'resta' && vecs.length >= 2) {
+    const coordsA = vA.componentes || [0, 0];
+    const coordsB = vB.componentes || [0, 0];
+    const coordsD = vR.componentes || [0, 0];
+
+    return `¡Te explico la resta de vectores súper fácil! ` +
+      `En pantalla tienes la flecha azul (vector A) y la flecha naranja (vector B). Ambas salieron del centro. ` +
+      `Imagina que tú estás parado en la punta de la flecha naranja B, y tu amigo está en la punta de la flecha azul A. ` +
+      `¡La flecha de la resta te muestra exactamente el puente directo que tienes que caminar para llegar desde donde está B hasta donde está A! ` +
+      `Esa distancia y dirección final es el vector diferencia ${formatTupleShort(coordsD)}.`;
+  }
+
+  if (tipo === 'producto_cruz') {
+    return `¡Mira qué divertido! Imagina que las dos flechas del piso están dibujadas planas en una hoja de papel. ` +
+      `El producto cruz inventa una flecha completamente nueva que sale disparada hacia arriba, como un cohete despegando de la hoja. ` +
+      `Forma una esquina cuadrada perfecta de 90 grados con las dos flechas de la base, ¡igual que la pata de una mesa!`;
+  }
+
+  if (tipo === 'producto_punto') {
+    const dot = hudInfo?.dotProduct ?? 0;
+    return `¡Te lo explico como a un niño! El producto punto te dice si las flechas son amigas y van hacia el mismo lado. ` +
+      `Como el resultado dio ${dot}, ${dot > 0 ? 'significa que las dos flechas van hacia adelante y se ayudan entre sí' : dot === 0 ? 'significa que son perpendiculares y van en caminos totalmente separados' : 'significa que apuntan en direcciones contrarias'}.`;
+  }
+
+  const coordsA = vA?.componentes || [0, 0];
+  const mag = vA?.magnitud || hudInfo?.vectors?.[0]?.magnitud || '';
+  return `¡Te lo explico fácil! Esta flecha representa un vector en ${formatTupleShort(coordsA)}. ` +
+    `Su tamaño o longitud total es de ${mag} pasos. ¡Es como medir con una regla qué tan largo fue el salto desde el centro hasta la punta!`;
+}
+
+// ══════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════
 export default function VectorScene({ 
@@ -373,6 +454,7 @@ export default function VectorScene({
   const [showProjections, setShowProjections] = useState(true);
   const [showStatsCard, setShowStatsCard] = useState(true);
   const [cameraPreset, setCameraPreset] = useState('3d'); // '3d' | 'xy' | 'xz' | 'yz'
+  const [activeExplanation, setActiveExplanation] = useState(null);
 
   const [vectorHUDInfo, setVectorHUDInfo] = useState({
     vectors: [],
@@ -710,12 +792,18 @@ export default function VectorScene({
 
       const vecName = rawVec.nombre || rawVec.name || defaultName;
 
+      // Respetar si el vector original ingresado fue de 2 dimensiones (R²) para no añadir un 0 artificial
+      const rawComp = rawVec?.componentes || rawVec?.coordenadas || rawVec?.coords || rawVec?.vector;
+      const isOriginal2D = Array.isArray(rawComp) && rawComp.length === 2;
+      const displayCoords = isOriginal2D ? [rawComp[0], rawComp[1]] : [x, y, z];
+
       infoList.push({
         nombre: vecName,
-        componentes: [x, y, z],
+        componentes: displayCoords,
         color: colorHex,
         magnitud: mag,
-        isResult
+        isResult,
+        is2D: isOriginal2D
       });
 
       // 1. Malla 3D del Vector con brillo y proporción limpia
@@ -725,7 +813,7 @@ export default function VectorScene({
       // 2. Badge Holográfico con posicionamiento inteligente anti-colisión
       const badge = createVectorBadgeSprite({
         name: vecName,
-        coords: [x, y, z],
+        coords: displayCoords,
         mag,
         colorHex,
         isResult
@@ -1077,7 +1165,7 @@ export default function VectorScene({
           <div className="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-500/40 text-cyan-300 shadow-lg shrink-0">
             <Box className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
             <span className="font-bold tracking-wider text-[11px]">
-              ESPACIO 3D {cameraPreset.toUpperCase()}
+              {vectorHUDInfo.vectors.every(v => v.is2D) ? 'PLANO 2D' : 'ESPACIO 3D'}{cameraPreset !== '3d' ? ` (${cameraPreset.toUpperCase()})` : ''}
             </span>
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
           </div>
@@ -1086,14 +1174,16 @@ export default function VectorScene({
             <button
               onClick={() => {
                 soundFX.playClick();
-                onSpeakLecture();
+                const eli5Text = generateELI5Explanation(visualizationData, vectorHUDInfo);
+                setActiveExplanation((prev) => (prev ? null : eli5Text));
+                onSpeakLecture(eli5Text);
               }}
-              className="px-2.5 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow"
-              title="Escuchar cátedra de Harvard mientras rotas los vectores en 3D"
+              className="px-2.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/25 to-emerald-500/25 hover:from-amber-500/35 hover:to-emerald-500/35 border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-md"
+              title="Explicar qué estás viendo en 3D de manera súper detallada y fácil, como a niños de 5 años"
             >
-              <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Cátedra Harvard</span>
-              <Volume2 className="w-3 h-3 text-amber-400 animate-pulse" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>Explicar 3D (Fácil)</span>
+              <Volume2 className="w-3 h-3 text-emerald-300 animate-pulse" />
             </button>
           )}
         </div>
@@ -1183,7 +1273,7 @@ export default function VectorScene({
               <Compass className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '20s' }} /> TELEMETRÍA VECTORIAL
             </span>
             <span className="text-[9px] font-bold bg-cyan-950/90 text-cyan-300 px-2.5 py-0.5 rounded-full border border-cyan-700/60 shadow-sm">
-              Base Canónica ℝ³
+              {vectorHUDInfo.vectors.every(v => v.is2D) ? 'Plano Cartesiano ℝ²' : 'Base Canónica ℝ³'}
             </span>
           </div>
 
@@ -1221,7 +1311,7 @@ export default function VectorScene({
                   <span className="text-red-400 font-bold">{vec.componentes[0]}î</span>
                   <span className="text-slate-500">{vec.componentes[1] < 0 ? '-' : '+'}</span>
                   <span className="text-emerald-400 font-bold">{Math.abs(vec.componentes[1])}ĵ</span>
-                  {vec.componentes[2] !== 0 && (
+                  {vec.componentes.length > 2 && vec.componentes[2] !== 0 && (
                     <>
                       <span className="text-slate-500">{vec.componentes[2] < 0 ? '-' : '+'}</span>
                       <span className="text-blue-400 font-bold">{Math.abs(vec.componentes[2])}k̂</span>
@@ -1269,6 +1359,28 @@ export default function VectorScene({
         </div>
       )}
 
+      {/* ── TARJETA FLOTANTE DIDÁCTICA (ELI5: EXPLICACIÓN PARA NIÑOS DE 5 AÑOS) ── */}
+      {activeExplanation && (
+        <div className="absolute bottom-14 left-3 right-3 sm:left-4 sm:right-auto sm:max-w-md md:max-w-lg z-20 bg-slate-950/95 backdrop-blur-xl rounded-2xl border border-amber-400/60 p-3.5 shadow-[0_0_35px_rgba(251,191,36,0.25)] pointer-events-auto text-xs text-amber-100 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex items-center justify-between border-b border-amber-500/30 pb-1.5">
+            <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs">
+              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span>Explicación Sencilla (Paso a Paso)</span>
+            </div>
+            <button
+              onClick={() => setActiveExplanation(null)}
+              className="text-amber-400/80 hover:text-white text-xs px-2 py-0.5 rounded-full hover:bg-white/10 transition-colors"
+              title="Cerrar explicación"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="leading-relaxed text-[11px] sm:text-xs text-slate-100 font-sans">
+            {activeExplanation}
+          </p>
+        </div>
+      )}
+
       {/* ── FOOTER HUD: ORIENTACIÓN Y ATAJOS ── */}
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none font-mono text-[10px]">
         {/* Identificadores de Ejes */}
@@ -1279,9 +1391,11 @@ export default function VectorScene({
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> +Y
           </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> +Z
-          </span>
+          {!vectorHUDInfo.vectors.every(v => v.is2D) && (
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> +Z
+            </span>
+          )}
         </div>
 
         {/* Guía de Interacción */}

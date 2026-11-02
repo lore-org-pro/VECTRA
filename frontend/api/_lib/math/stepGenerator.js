@@ -5,11 +5,11 @@ import { vectorEngine } from './vectorEngine.js';
 import { naturalVectorParser } from './naturalParser.js';
 
 /**
- * Formatea un vector tridimensional en notación canónica perfecta para LaTeX:
+ * Formatea un vector bi o tridimensional en notación canónica perfecta para LaTeX:
  * Elimina signos redundantes como "+ -", suprime componentes nulas (+ 0k),
  * y gestiona coeficientes unitarios (1i -> i, -1j -> -j).
  */
-export function formatCanonicalLatex(x, y, z = 0) {
+export function formatCanonicalLatex(x, y, z) {
   const parts = [];
   if (x !== 0) {
     const coeff = x === 1 ? '' : x === -1 ? '-' : x;
@@ -24,7 +24,7 @@ export function formatCanonicalLatex(x, y, z = 0) {
       parts.push(y > 0 ? `+ ${coeff}\\hat{j}` : `- ${coeff}\\hat{j}`);
     }
   }
-  if (z !== 0) {
+  if (z !== undefined && z !== null && z !== 0) {
     const absZ = Math.abs(z);
     const coeff = absZ === 1 ? '' : absZ;
     if (parts.length === 0) {
@@ -40,23 +40,29 @@ export function formatCanonicalLatex(x, y, z = 0) {
  * Genera explicaciones analíticas formales de cátedra universitaria nivel Harvard
  */
 export function buildHarvardExplanation(op, vectors, res) {
-  const v1 = vectors[0] || [0, 0, 0];
-  const v2 = vectors[1] || [0, 0, 0];
+  const v1 = vectors[0] || [0, 0];
+  const v2 = vectors[1] || [0, 0];
+  const is2D = (v1.length === 2 && v2.length === 2);
 
   if (op === 'suma') {
-    const [x, y, z] = res;
-    const magSq = x * x + y * y + z * z;
+    const x = res[0] || 0;
+    const y = res[1] || 0;
+    const z = res[2];
+    const magSq = is2D ? (x * x + y * y) : (x * x + y * y + (z || 0) * (z || 0));
     const mag = Math.round(Math.sqrt(magSq) * 100) / 100;
     const can = formatCanonicalLatex(x, y, z);
     const xDesc = x !== 0 ? `${x > 0 ? 'un avance positivo de ' + x : 'un retroceso de ' + Math.abs(x)} unidades en el eje X` : 'coordenada nula en X';
     const yDesc = y !== 0 ? `${y > 0 ? 'una elevación de ' + y : 'una deflexión descendente de ' + Math.abs(y)} unidades en el eje Y` : 'sin componente vertical en Y';
-    const zDesc = z !== 0 ? ` y ${z > 0 ? 'un desplazamiento cota de +' + z : 'un desplazamiento dorsal de ' + z} unidades en Z` : ' permaneciendo en el plano principal';
+    const zDesc = (!is2D && z !== undefined && z !== 0) ? ` y ${z > 0 ? 'un desplazamiento cota de +' + z : 'un desplazamiento dorsal de ' + z} unidades en Z` : '';
 
-    return `Análisis formal de cátedra: la adición vectorial cumple con el principio de superposición lineal en el espacio afín euclidiano ℝ³. El vector resultante R = ${can} integra ambas trayectorias: presenta ${xDesc}, ${yDesc}${zDesc}. Su norma euclidiana o módulo invariante es ||R|| = √${magSq} ≈ ${mag} unidades. Su vector unitario normalizado û define con rigor absoluto su recta de acción en el espacio, confirmando la ley geométrica del paralelogramo de Cauchy-Schwarz.`;
+    const espacioDesc = is2D ? 'en el plano euclidiano ℝ²' : 'en el espacio afín euclidiano ℝ³';
+    return `Análisis formal de cátedra: la adición vectorial cumple con el principio de superposición lineal ${espacioDesc}. El vector resultante R = ${can} integra ambas trayectorias: presenta ${xDesc}, ${yDesc}${zDesc}. Su norma euclidiana o módulo invariante es ||R|| = √${magSq} ≈ ${mag} unidades. Su vector unitario normalizado û define con rigor absoluto su recta de acción, confirmando la ley geométrica del paralelogramo de Cauchy-Schwarz.`;
   }
   if (op === 'resta') {
-    const [x, y, z] = res;
-    const magSq = x * x + y * y + z * z;
+    const x = res[0] || 0;
+    const y = res[1] || 0;
+    const z = res[2];
+    const magSq = is2D ? (x * x + y * y) : (x * x + y * y + (z || 0) * (z || 0));
     const mag = Math.round(Math.sqrt(magSq) * 100) / 100;
     const can = formatCanonicalLatex(x, y, z);
     return `Análisis formal de cátedra: la diferencia de vectores cuantifica el vector de desplazamiento relativo que conecta el extremo del vector B con el extremo del vector A. El vector resultante D = ${can} posee una norma euclidiana ||D|| = √${magSq} ≈ ${mag} unidades, caracterizando analíticamente el tensor de separación posicional entre ambos estados.`;
@@ -82,6 +88,48 @@ export function buildHarvardExplanation(op, vectors, res) {
   return `Análisis formal de cátedra: la operación vectorial ha sido resuelta y verificada analíticamente con total rigor matemático, preservando las propiedades fundamentales del álgebra lineal euclidiana.`;
 }
 
+/**
+ * Genera explicaciones didácticas cristalinas nivel niño de 5 años (ELI5 / Explain Like I'm 5)
+ */
+export function buildELI5Explanation(op, vectors, res) {
+  const v1 = vectors[0] || [0, 0];
+  const v2 = vectors[1] || [0, 0];
+  const is2D = (v1.length === 2 && v2.length === 2);
+
+  if (op === 'suma') {
+    const rx = res[0];
+    const ry = res[1];
+    const rz = res[2];
+    const mag = Math.round(vectorEngine.magnitude(res) * 100) / 100;
+    if (is2D) {
+      return `¡Te lo explico como si tuvieras 5 años! Imagina que estás jugando en un patio de baldosas y estás parado en el centro (cero, cero). Cada flecha es un camino con pasos. La flecha azul te dice: camina ${v1[0]} pasos a los lados y ${v1[1]} pasos adelante o atrás. La flecha naranja es tu segundo camino: camina ${v2[0]} pasos a los lados y ${v2[1]} pasos. ¿Y ves esa gran flecha verde brillante? ¡Ese es el superatajo mágico! En vez de dar dos caminatas largas, la flecha verde te lleva directo en línea recta desde la salida hasta la meta final en (${rx}, ${ry}), midiendo exactamente ${mag} pasos de largo. ¡Sumar vectores es encontrar el atajo directo de las flechas!`;
+    } else {
+      return `¡Te lo explico como si tuvieras 5 años! Imagina que estás en una habitación flotando en el centro (cero, cero, cero). Las flechas son como caminos de luces en el aire. La flecha azul es tu primer salto en el espacio, y la flecha naranja es tu segundo salto. ¿Y ves la flecha verde brillante? ¡Es el cohete directo! En vez de seguir un camino y luego el otro, la flecha verde va en línea recta desde donde empezaste hasta la meta final en (${rx}, ${ry}, ${rz}), con un tamaño total de ${mag} pasos. ¡Sumar vectores es simplemente descubrir a dónde llegas si sigues las flechas una tras otra!`;
+    }
+  }
+
+  if (op === 'resta') {
+    const mag = Math.round(vectorEngine.magnitude(res) * 100) / 100;
+    return `¡Te lo explico súper fácil! En la resta de vectores, imagina que dos amigos salieron del mismo punto: tu amigo A llegó a donde termina la flecha azul y tu amigo B llegó a donde termina la flecha naranja. La resta es el puente que los une: le dice a tu amigo B exactamente cuántos pasos y hacia dónde tiene que caminar para llegar directo hasta donde está su amigo A, ¡a una distancia de ${mag} pasos!`;
+  }
+
+  if (op === 'producto_cruz') {
+    return `¡Mira qué divertido! Imagina que tienes dos flechas acostadas sobre una mesa plana, como dos lápices. El producto cruz inventa una flecha completamente nueva que sale disparada hacia arriba hacia el techo, como si fuera un cohete despegando de la mesa. Esa nueva flecha forma una esquina cuadrada perfecta de 90 grados con las dos flechas de la mesa, ¡igual que la esquina de una caja de zapatos!`;
+  }
+
+  if (op === 'producto_punto') {
+    const dot = typeof res === 'number' ? res : 0;
+    return `¡Te lo explico fácil! El producto punto te dice si dos flechas son amigas y van hacia el mismo lado. Como el resultado nos dio ${dot}, ${dot > 0 ? '¡las dos flechas están contentas y caminan en una dirección parecida hacia adelante!' : dot === 0 ? '¡las flechas son totalmente independientes y forman una esquina cuadrada perfecta de 90 grados!' : '¡las flechas apuntan en direcciones contrarias!'}`;
+  }
+
+  if (op === 'magnitud') {
+    const mag = typeof res === 'number' ? res : 0;
+    return `¡Es lo más sencillo del mundo! La magnitud es simplemente tomar una regla y medir qué tan larga es la flecha desde donde nace hasta su puntita. Esta flecha mide ${mag} pasos de largo. ¡Entre más larga la flecha, más lejos llega o más fuerza tiene!`;
+  }
+
+  return `¡Te lo explico fácil! Cada flecha que ves en la pantalla te enseña hacia dónde moverte y qué tan lejos llegar. ¡Es como un mapa de tesoro interactivo!`;
+}
+
 export class StepGenerator {
   /**
    * Verifica la respuesta del LLM contra el motor determinista.
@@ -99,42 +147,82 @@ export class StepGenerator {
     }
 
     try {
-      const v1 = vectors[0] || [0, 0, 0];
-      const v2 = vectors[1] || [0, 0, 0];
-      const v3 = vectors[2] || [0, 0, 0];
+      const v1 = vectors[0] || [0, 0];
+      const v2 = vectors[1] || [0, 0];
+      const v3 = vectors[2] || [0, 0];
+      const is2D = (v1.length === 2 && v2.length === 2);
 
       let verifiedData = null;
 
       if (op === 'suma' && vectors.length >= 2) {
         const R = vectorEngine.add(v1, v2);
         const harvardLecture = buildHarvardExplanation('suma', [v1, v2], R);
+        const eli5Lecture = buildELI5Explanation('suma', [v1, v2], R);
+
+        const latexStep1 = is2D
+          ? `\\vec{A} = \\langle ${v1[0]}, \\; ${v1[1]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, \\; ${v2[1]} \\rangle`
+          : `\\vec{A} = \\langle ${v1[0]}, \\; ${v1[1]}, \\; ${v1[2]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, \\; ${v2[1]}, \\; ${v2[2]} \\rangle`;
+
+        const expStep1 = is2D
+          ? `Vector A = (${v1[0]}, ${v1[1]}) y Vector B = (${v2[0]}, ${v2[1]}).`
+          : `Vector A = (${v1[0]}, ${v1[1]}, ${v1[2]}) y Vector B = (${v2[0]}, ${v2[1]}, ${v2[2]}).`;
+
+        const locStep1 = is2D
+          ? `Primer paso. Observa en la pizarra la identificación de los dos vectores en el plano cartesiano. El vector A tiene componentes ${v1[0]} en el eje horizontal X y ${v1[1]} en el eje vertical Y. El vector B se define con ${v2[0]} en X y ${v2[1]} en Y.`
+          : `Primer paso. Observa en la pizarra la identificación de los dos vectores en el espacio. El vector A tiene componentes ${v1[0]} en X, ${v1[1]} en Y y ${v1[2]} en Z. El vector B se define con ${v2[0]} en X, ${v2[1]} en Y y ${v2[2]} en Z.`;
+
+        const latexStep2 = is2D
+          ? `\\vec{R} = \\langle ${v1[0]} + (${v2[0]}), \\; ${v1[1]} + (${v2[1]}) \\rangle`
+          : `\\vec{R} = \\langle ${v1[0]} + (${v2[0]}), \\; ${v1[1]} + (${v2[1]}), \\; ${v1[2]} + (${v2[2]}) \\rangle`;
+
+        const expStep2 = is2D
+          ? `Sumamos las coordenadas homólogas: (${v1[0]} + ${v2[0]}) en X, (${v1[1]} + ${v2[1]}) en Y.`
+          : `Sumamos las coordenadas homólogas: (${v1[0]} + ${v2[0]}) en X, (${v1[1]} + ${v2[1]}) en Y, (${v1[2]} + ${v2[2]}) en Z.`;
+
+        const locStep2 = is2D
+          ? `Segundo paso. Sumamos componente a componente: en el eje X sumamos ${v1[0]} con ${v2[0]}, y en el eje Y sumamos ${v1[1]} con ${v2[1]}. Al respetar los signos negativos obtenemos las nuevas coordenadas directamente.`
+          : `Segundo paso. Aplicamos el principio de superposición lineal sumando las componentes correspondientes en X, Y y Z.`;
+
+        const latexStep3 = is2D
+          ? `\\vec{R} = \\langle ${R[0]}, \\; ${R[1]} \\rangle`
+          : `\\vec{R} = \\langle ${R[0]}, \\; ${R[1]}, \\; ${R[2]} \\rangle`;
+
+        const expStep3 = is2D
+          ? `Vector resultante simplificado: (${R[0]}, ${R[1]}) con módulo ||R|| ≈ ${Math.round(vectorEngine.magnitude(R) * 100) / 100}.`
+          : `Vector resultante simplificado: (${R[0]}, ${R[1]}, ${R[2]}) con módulo ||R|| ≈ ${Math.round(vectorEngine.magnitude(R) * 100) / 100}.`;
+
+        const locStep3 = is2D
+          ? `Tercer paso. Obtenemos el vector resultante: ${R[0]} unidades en X y ${R[1]} unidades en Y. Su longitud total o módulo euclidiano es de aproximadamente ${Math.round(vectorEngine.magnitude(R) * 100) / 100} unidades.`
+          : `Tercer paso. Obtenemos el vector resultante con componentes ${R[0]} en i, ${R[1]} en j y ${R[2]} en k. Su longitud total o módulo es de aproximadamente ${Math.round(vectorEngine.magnitude(R) * 100) / 100} unidades.`;
+
         verifiedData = {
           habla: `Resolvamos la suma de vectores paso a paso en el pizarrón. Presta atención al desarrollo cartesiano.`,
           emocion: 'feliz',
           pasos: [
             {
-              titulo: 'Identificación de Vectores en el Espacio',
-              latex: `\\vec{A} = \\langle ${v1[0]}, ${v1[1]}, ${v1[2]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, ${v2[1]}, ${v2[2]} \\rangle`,
-              explicacion: `Vector A = (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}) y Vector B = (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}).`,
-              locucion: `Primer paso. Observa en la pizarra la identificación de los dos vectores. El vector A tiene componentes ${v1[0]} en el eje X horizontal y ${v1[1]} en el eje Y vertical${v1[2] ? ', con cota ' + v1[2] + ' en Z' : ''}. El vector B se define con ${v2[0]} en X y ${v2[1]} en Y${v2[2] ? ', con ' + v2[2] + ' en Z' : ''}. Cada número marca exactamente su posición cartesiana.`
+              titulo: is2D ? 'Identificación de Vectores en el Plano' : 'Identificación de Vectores en el Espacio',
+              latex: latexStep1,
+              explicacion: expStep1,
+              locucion: locStep1
             },
             {
               titulo: 'Suma Analítica Componente a Componente',
-              latex: `\\vec{R} = \\langle ${v1[0]} + (${v2[0]}), \\; ${v1[1]} + (${v2[1]}), \\; ${v1[2]} + (${v2[2]}) \\rangle`,
-              explicacion: `Sumamos las coordenadas homólogas: (${v1[0]} + ${v2[0]}) en X, (${v1[1]} + ${v2[1]}) en Y, (${v1[2]} + ${v2[2]}) en Z.`,
-              locucion: `Segundo paso. Aplicamos el principio de superposición lineal. Como ves en pantalla, sumamos de forma estricta las componentes homólogas: en el eje X sumamos ${v1[0]} con ${v2[0]}, y en el eje Y sumamos ${v1[1]} con ${v2[1]}${v1[2] || v2[2] ? ', y en Z ' + v1[2] + ' con ' + v2[2] : ''}. Es fundamental respetar los paréntesis en valores negativos para mantener la dirección correcta.`
+              latex: latexStep2,
+              explicacion: expStep2,
+              locucion: locStep2
             },
             {
               titulo: 'Vector Resultante Simplificado',
-              latex: `\\vec{R} = \\langle ${R[0]}, ${R[1]}, ${R[2]} \\rangle`,
-              explicacion: `Vector resultante simplificado: (${R[0]}, ${R[1]}${R[2] ? ', ' + R[2] : ''}) con módulo ||R|| ≈ ${Math.round(vectorEngine.magnitude(R) * 100) / 100}.`,
-              locucion: `Tercer paso. Al calcular la aritmética obtenemos el vector resultante: ${R[0]} unidades en dirección del versor i, y ${R[1] < 0 ? 'menos ' + Math.abs(R[1]) : 'más ' + R[1]} unidades en dirección del versor j${R[2] ? ', con ' + R[2] + ' en k' : ''}. Su longitud total o módulo euclidiano es de aproximadamente ${Math.round(vectorEngine.magnitude(R) * 100) / 100} unidades.`
+              latex: latexStep3,
+              explicacion: expStep3,
+              locucion: locStep3
             }
           ],
           resultado: {
-            latex: `\\vec{R} = ${formatCanonicalLatex(R[0], R[1], R[2])}`,
-            texto: `El vector suma es (${R[0]}, ${R[1]}, ${R[2]}).`,
-            explicacionHarvard: harvardLecture
+            latex: is2D ? `\\vec{R} = ${formatCanonicalLatex(R[0], R[1])}` : `\\vec{R} = ${formatCanonicalLatex(R[0], R[1], R[2])}`,
+            texto: is2D ? `El vector suma es (${R[0]}, ${R[1]}).` : `El vector suma es (${R[0]}, ${R[1]}, ${R[2]}).`,
+            explicacionHarvard: harvardLecture,
+            explicacionFacil: eli5Lecture
           },
           visualizacion: {
             tipo: 'suma',
@@ -148,33 +236,51 @@ export class StepGenerator {
       } else if (op === 'resta' && vectors.length >= 2) {
         const D = vectorEngine.subtract(v1, v2);
         const harvardLecture = buildHarvardExplanation('resta', [v1, v2], D);
+        const eli5Lecture = buildELI5Explanation('resta', [v1, v2], D);
         verifiedData = {
           habla: `Analicemos la resta de vectores término a término en el pizarrón.`,
           emocion: 'neutral',
           pasos: [
             {
-              titulo: 'Identificación de Minuendo y Sustraendo',
-              latex: `\\vec{A} = \\langle ${v1[0]}, ${v1[1]}, ${v1[2]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, ${v2[1]}, ${v2[2]} \\rangle`,
-              explicacion: `Minuendo A = (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}) y Sustraendo B = (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}).`,
-              locucion: `Primer paso. Identificamos en el pizarrón el vector A como minuendo con componentes (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}), y el vector B como sustraendo con componentes (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}). La resta geométrica determinará el vector de desplazamiento directo que va desde el extremo de B hacia el extremo de A.`
+              titulo: is2D ? 'Identificación de Minuendo y Sustraendo en el Plano' : 'Identificación de Minuendo y Sustraendo en el Espacio',
+              latex: is2D
+                ? `\\vec{A} = \\langle ${v1[0]}, \\; ${v1[1]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, \\; ${v2[1]} \\rangle`
+                : `\\vec{A} = \\langle ${v1[0]}, \\; ${v1[1]}, \\; ${v1[2]} \\rangle, \\quad \\vec{B} = \\langle ${v2[0]}, \\; ${v2[1]}, \\; ${v2[2]} \\rangle`,
+              explicacion: is2D
+                ? `Minuendo A = (${v1[0]}, ${v1[1]}) y Sustraendo B = (${v2[0]}, ${v2[1]}).`
+                : `Minuendo A = (${v1[0]}, ${v1[1]}, ${v1[2]}) y Sustraendo B = (${v2[0]}, ${v2[1]}, ${v2[2]}).`,
+              locucion: is2D
+                ? `Primer paso. Identificamos en el pizarrón el vector A como minuendo con componentes (${v1[0]}, ${v1[1]}), y el vector B como sustraendo con componentes (${v2[0]}, ${v2[1]}).`
+                : `Primer paso. Identificamos en el pizarrón el vector A como minuendo con componentes (${v1[0]}, ${v1[1]}${v1[2] ? ', ' + v1[2] : ''}), y el vector B como sustraendo con componentes (${v2[0]}, ${v2[1]}${v2[2] ? ', ' + v2[2] : ''}).`
             },
             {
               titulo: 'Diferencia Algebraica de Coordenadas',
-              latex: `\\vec{D} = \\vec{A} - \\vec{B} = \\langle ${v1[0]} - (${v2[0]}), \\; ${v1[1]} - (${v2[1]}), \\; ${v1[2]} - (${v2[2]}) \\rangle`,
-              explicacion: `Restamos cada componente de B respecto a A: (${v1[0]} - ${v2[0]}) en X, (${v1[1]} - ${v2[1]}) en Y.`,
-              locucion: `Segundo paso. Planteamos la diferencia algebraica. A cada coordenada del primer vector le restamos la coordenada correspondiente del segundo vector. Observa en la fórmula cómo un signo menos delante de otro negativo se transforma en adición positiva.`
+              latex: is2D
+                ? `\\vec{D} = \\vec{A} - \\vec{B} = \\langle ${v1[0]} - (${v2[0]}), \\; ${v1[1]} - (${v2[1]}) \\rangle`
+                : `\\vec{D} = \\vec{A} - \\vec{B} = \\langle ${v1[0]} - (${v2[0]}), \\; ${v1[1]} - (${v2[1]}), \\; ${v1[2]} - (${v2[2]}) \\rangle`,
+              explicacion: is2D
+                ? `Restamos cada componente de B respecto a A: (${v1[0]} - ${v2[0]}) en X, (${v1[1]} - ${v2[1]}) en Y.`
+                : `Restamos cada componente de B respecto a A: (${v1[0]} - ${v2[0]}) en X, (${v1[1]} - ${v2[1]}) en Y, (${v1[2]} - ${v2[2]}) en Z.`,
+              locucion: `Segundo paso. Planteamos la diferencia algebraica. A cada coordenada del primer vector le restamos la coordenada correspondiente del segundo vector.`
             },
             {
               titulo: 'Vector Diferencia Simplificado',
-              latex: `\\vec{D} = \\langle ${D[0]}, ${D[1]}, ${D[2]} \\rangle`,
-              explicacion: `Vector desplazamiento D = (${D[0]}, ${D[1]}${D[2] ? ', ' + D[2] : ''}) con módulo ||D|| ≈ ${Math.round(vectorEngine.magnitude(D) * 100) / 100}.`,
-              locucion: `Tercer paso. Tras realizar las restas obtenemos el vector diferencia final: ${D[0]} unidades en X y ${D[1]} unidades en Y${D[2] ? ' con ' + D[2] + ' en Z' : ''}, caracterizando con exactitud la separación vectorial entre ambos estados.`
+              latex: is2D
+                ? `\\vec{D} = \\langle ${D[0]}, \\; ${D[1]} \\rangle`
+                : `\\vec{D} = \\langle ${D[0]}, \\; ${D[1]}, \\; ${D[2]} \\rangle`,
+              explicacion: is2D
+                ? `Vector desplazamiento D = (${D[0]}, ${D[1]}) con módulo ||D|| ≈ ${Math.round(vectorEngine.magnitude(D) * 100) / 100}.`
+                : `Vector desplazamiento D = (${D[0]}, ${D[1]}, ${D[2]}) con módulo ||D|| ≈ ${Math.round(vectorEngine.magnitude(D) * 100) / 100}.`,
+              locucion: is2D
+                ? `Tercer paso. Tras realizar las restas obtenemos el vector diferencia final: ${D[0]} unidades en X y ${D[1]} unidades en Y.`
+                : `Tercer paso. Tras realizar las restas obtenemos el vector diferencia final: ${D[0]} unidades en X y ${D[1]} unidades en Y${D[2] ? ' con ' + D[2] + ' en Z' : ''}.`
             }
           ],
           resultado: {
-            latex: `\\vec{D} = ${formatCanonicalLatex(D[0], D[1], D[2])}`,
-            texto: `El vector resta es (${D[0]}, ${D[1]}, ${D[2]}).`,
-            explicacionHarvard: harvardLecture
+            latex: is2D ? `\\vec{D} = ${formatCanonicalLatex(D[0], D[1])}` : `\\vec{D} = ${formatCanonicalLatex(D[0], D[1], D[2])}`,
+            texto: is2D ? `El vector resta es (${D[0]}, ${D[1]}).` : `El vector resta es (${D[0]}, ${D[1]}, ${D[2]}).`,
+            explicacionHarvard: harvardLecture,
+            explicacionFacil: eli5Lecture
           },
           visualizacion: {
             tipo: 'resta',
@@ -229,29 +335,37 @@ export class StepGenerator {
         const dot = vectorEngine.dotProduct(v1, v2);
         const isOrth = vectorEngine.isOrthogonal(v1, v2);
         const harvardLecture = buildHarvardExplanation('producto_punto', [v1, v2], dot);
+        const eli5Lecture = buildELI5Explanation('producto_punto', [v1, v2], dot);
         verifiedData = {
           habla: `Evaluemos el producto escalar y su ortogonalidad paso a paso.`,
           emocion: isOrth ? 'feliz' : 'neutral',
           pasos: [
             {
-              titulo: 'Definición del Producto Punto',
-              latex: `\\vec{A} \\cdot \\vec{B} = A_x B_x + A_y B_y + A_z B_z`,
+              titulo: is2D ? 'Definición del Producto Punto en el Plano' : 'Definición del Producto Punto',
+              latex: is2D 
+                ? `\\vec{A} \\cdot \\vec{B} = A_x B_x + A_y B_y`
+                : `\\vec{A} \\cdot \\vec{B} = A_x B_x + A_y B_y + A_z B_z`,
               explicacion: 'Multiplicamos las componentes correspondientes y sumamos los productos.',
-              locucion: `Primer paso. Observa en la pizarra la definición del producto escalar. Multiplicamos cada componente del vector A por su correspondiente en B: X con X, Y con Y, y Z con Z. Recuerda que el producto escalar produce un número único y no un vector.`
+              locucion: is2D
+                ? `Primer paso. Observa en la pizarra la definición del producto escalar en el plano. Multiplicamos cada componente: X con X, y Y con Y.`
+                : `Primer paso. Observa en la pizarra la definición del producto escalar. Multiplicamos cada componente del vector A por su correspondiente en B: X con X, Y con Y, y Z con Z.`
             },
             {
               titulo: 'Evaluación Numérica y Ortogonalidad',
-              latex: `(${v1[0]})(${v2[0]}) + (${v1[1]})(${v2[1]}) + (${v1[2]})(${v2[2]}) = ${dot}`,
+              latex: is2D
+                ? `(${v1[0]})(${v2[0]}) + (${v1[1]})(${v2[1]}) = ${dot}`
+                : `(${v1[0]})(${v2[0]}) + (${v1[1]})(${v2[1]}) + (${v1[2]})(${v2[2]}) = ${dot}`,
               explicacion: isOrth ? 'La suma de los productos da exactamente 0: vectores estrictamente ortogonales (90°).' : `El valor escalar resultante es ${dot}. Al ser diferente de cero, los vectores no forman 90°.`,
               locucion: isOrth
-                ? `Segundo paso. Al multiplicar (${v1[0]} por ${v2[0]}) más (${v1[1]} por ${v2[1]}) más (${v1[2]} por ${v2[2]}), la suma se anula exactamente a cero. En pantalla ves el resultado cero, lo que demuestra matemáticamente que ambos vectores forman un ángulo recto de 90 grados y son ortogonales.`
+                ? `Segundo paso. La suma da cero, lo que demuestra matemáticamente que ambos vectores forman un ángulo recto de 90 grados y son ortogonales.`
                 : `Segundo paso. Efectuamos las multiplicaciones y la adición, obteniendo un valor escalar final de ${dot}. Al ser distinto de cero, los vectores no forman 90 grados entre sí.`
             }
           ],
           resultado: {
             latex: `\\vec{A} \\cdot \\vec{B} = ${dot} \\quad ${isOrth ? '(\\vec{A} \\perp \\vec{B})' : ''}`,
             texto: `El producto punto es ${dot}.`,
-            explicacionHarvard: harvardLecture
+            explicacionHarvard: harvardLecture,
+            explicacionFacil: eli5Lecture
           },
           visualizacion: {
             tipo: 'producto_punto',
@@ -264,27 +378,34 @@ export class StepGenerator {
       } else if (op === 'magnitud' && vectors.length >= 1) {
         const mag = Math.round(vectorEngine.magnitude(v1) * 1000) / 1000;
         const harvardLecture = buildHarvardExplanation('magnitud', [v1], mag);
+        const eli5Lecture = buildELI5Explanation('magnitud', [v1], mag);
+        const sumSq = is2D ? (v1[0] * v1[0] + v1[1] * v1[1]) : (v1[0] * v1[0] + v1[1] * v1[1] + (v1[2] || 0) * (v1[2] || 0));
         verifiedData = {
           habla: `Calculemos la norma euclidiana del vector paso a paso en el pizarrón.`,
           emocion: 'feliz',
           pasos: [
             {
-              titulo: 'Fórmula de la Norma Euclídea',
-              latex: `\\|\\vec{v}\\| = \\sqrt{x^2 + y^2 + z^2}`,
-              explicacion: 'Aplicamos el teorema de Pitágoras tridimensional.',
-              locucion: `Primer paso. Para calcular el módulo o tamaño del vector, aplicamos en la pizarra la generalización del teorema de Pitágoras: la raíz cuadrada de la suma de los cuadrados de cada una de sus coordenadas.`
+              titulo: is2D ? 'Fórmula de la Norma en el Plano' : 'Fórmula de la Norma Euclídea',
+              latex: is2D ? `\\|\\vec{v}\\| = \\sqrt{x^2 + y^2}` : `\\|\\vec{v}\\| = \\sqrt{x^2 + y^2 + z^2}`,
+              explicacion: is2D ? 'Aplicamos el teorema de Pitágoras en el plano cartesiano.' : 'Aplicamos el teorema de Pitágoras tridimensional.',
+              locucion: is2D
+                ? `Primer paso. Para calcular el módulo del vector en el plano, aplicamos el teorema de Pitágoras: la raíz cuadrada de la suma de los cuadrados de X y Y.`
+                : `Primer paso. Para calcular el módulo o tamaño del vector, aplicamos en la pizarra la generalización del teorema de Pitágoras: la raíz cuadrada de la suma de los cuadrados de cada una de sus coordenadas.`
             },
             {
               titulo: 'Sustitución y Radicación',
-              latex: `\\sqrt{(${v1[0]})^2 + (${v1[1]})^2 + (${v1[2]})^2} = \\sqrt{${v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]}} = ${mag}`,
-              explicacion: `Suma de cuadrados = ${v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]}, cuya raíz cuadrada es ${mag}.`,
-              locucion: `Segundo paso. Elevamos al cuadrado cada componente, sumamos los valores obtenidos resultando en ${v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]}, y extrayendo la raíz cuadrada principal obtenemos una longitud exacta de ${mag} unidades.`
+              latex: is2D
+                ? `\\sqrt{(${v1[0]})^2 + (${v1[1]})^2} = \\sqrt{${sumSq}} = ${mag}`
+                : `\\sqrt{(${v1[0]})^2 + (${v1[1]})^2 + (${v1[2] || 0})^2} = \\sqrt{${sumSq}} = ${mag}`,
+              explicacion: `Suma de cuadrados = ${sumSq}, cuya raíz cuadrada es ${mag}.`,
+              locucion: `Segundo paso. Elevamos al cuadrado cada componente, sumamos los valores obtenidos resultando en ${sumSq}, y extrayendo la raíz cuadrada principal obtenemos una longitud exacta de ${mag} unidades.`
             }
           ],
           resultado: {
             latex: `\\|\\vec{v}\\| = ${mag}`,
             texto: `La magnitud es ${mag}.`,
-            explicacionHarvard: harvardLecture
+            explicacionHarvard: harvardLecture,
+            explicacionFacil: eli5Lecture
           },
           visualizacion: {
             tipo: 'escalar',

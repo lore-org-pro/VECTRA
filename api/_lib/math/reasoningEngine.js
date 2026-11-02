@@ -26,9 +26,12 @@ export class ReasoningEngine {
     let verificacion = 'Coherencia lógica y rigor conceptual';
 
     if (norm.includes('vector') || norm.includes('vectores') || norm.includes('cruz') || norm.includes('punto') || norm.includes('norma')) {
-      dominio = 'Álgebra vectorial en R³';
-      estrategia = 'Extracción de componentes canónicas, validación de dimensiones y producto analítico';
-      verificacion = 'Verificación de ortogonalidad o norma euclidiana';
+      const is2D = (Array.isArray(parsedNumbers) && (parsedNumbers.length === 4 || parsedNumbers.length === 2));
+      dominio = is2D ? 'Álgebra vectorial en ℝ²' : 'Álgebra vectorial en ℝ³';
+      estrategia = is2D
+        ? 'Extracción de componentes en el plano cartesiano, suma analítica y módulo euclidiano'
+        : 'Extracción de componentes canónicas, validación de dimensiones y producto analítico';
+      verificacion = is2D ? 'Validación de norma euclidiana en el plano' : 'Verificación de ortogonalidad o norma euclidiana';
     } else if (norm.includes('cuantica') || norm.includes('relatividad') || norm.includes('fisica') || norm.includes('agujero negro') || norm.includes('universo') || norm.includes('luz') || norm.includes('energia')) {
       dominio = 'Física y Cosmología';
       estrategia = 'Aplicación de principios fundamentales (mecánica relativista, termodinámica o cuántica) y analogías intuitivas';
