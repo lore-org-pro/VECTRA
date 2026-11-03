@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mic, MicOff, Send, MessageSquare, Radio, Volume2, ShieldCheck } from 'lucide-react';
+import { Mic, MicOff, Send, MessageSquare, Radio, Volume2, ShieldCheck, School } from 'lucide-react';
 import { soundFX } from '../../utils/audioFX';
 
 export default function ControlBar({
@@ -10,7 +10,10 @@ export default function ControlBar({
   audioLevel = 0,
   micLabel = '',
   availableMics = [],
-  onSwitchMic
+  onSwitchMic,
+  isWakeWordMode = false,
+  onToggleWakeWord,
+  wakeWordPulse = false
 }) {
   const [inputText, setInputText] = useState('');
 
@@ -94,7 +97,7 @@ export default function ControlBar({
         <div className="flex flex-col text-xs font-sans">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-              {isListening ? 'CAPTURANDO VOZ' : 'ESPACIO = HABLAR'}
+              {isListening ? 'CAPTURANDO VOZ' : isWakeWordMode ? 'DI "VECTRA"' : 'ESPACIO = HABLAR'}
             </span>
             {isWireless && (
               <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-300">
@@ -109,6 +112,22 @@ export default function ControlBar({
               <ShieldCheck className="w-2.5 h-2.5 text-cyan-600" />
               ANTIRRUIDO AULA
             </span>
+            {/* Botón Modo Clase (Wake Word "VECTRA") */}
+            {onToggleWakeWord && (
+              <button
+                type="button"
+                onClick={onToggleWakeWord}
+                className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border cursor-pointer transition-all active:scale-95 ${
+                  isWakeWordMode
+                    ? 'bg-violet-600 text-white border-violet-700 shadow-sm shadow-violet-300/60 animate-pulse'
+                    : 'bg-violet-50 text-violet-800 border-violet-300 hover:bg-violet-100'
+                } ${wakeWordPulse ? 'scale-110 shadow-md shadow-violet-400/80' : ''}`}
+                title={isWakeWordMode ? 'Desactivar Modo Clase (Wake Word "VECTRA")' : 'Activar Modo Clase — Di "VECTRA" para hablar sin tocar nada'}
+              >
+                <School className="w-2.5 h-2.5" />
+                {isWakeWordMode ? 'MODO CLASE ●' : 'MODO CLASE'}
+              </button>
+            )}
             {/* Selector de micrófono si hay más de 1 conectado */}
             {availableMics.length > 1 && (
               <select

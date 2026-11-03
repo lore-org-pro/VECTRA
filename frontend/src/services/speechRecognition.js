@@ -1,13 +1,21 @@
 // ========================================================
-// VECTRA // STT SERVICE v4 — GROQ WHISPER + WIRELESS/USB MIC SUPPORT
+// VECTRA // STT SERVICE v5 — WAKE WORD + GROQ WHISPER + WIRELESS/USB MIC SUPPORT
 // Optimizado para:
-//   1) Micrófonos inalámbricos de solapa / USB dongle para exposiciones
-//   2) Selección automática de micrófono externo prioritario
-//   3) Medidor VU de audio en tiempo real para verificar señal inalámbrica
-//   4) MediaRecorder + Groq Whisper (latencia <500ms, inmune a Brave)
+//   1) Wake word "VECTRA" siempre escuchando en segundo plano (sin clic)
+//   2) Micrófonos inalámbricos de solapa / USB dongle para exposiciones
+//   3) Selección automática de micrófono externo prioritario
+//   4) Medidor VU de audio en tiempo real para verificar señal inalámbrica
+//   5) MediaRecorder + Groq Whisper (latencia <500ms, inmune a Brave)
 // ========================================================
 
 const BACKEND_TRANSCRIBE = '/api/transcribe';
+
+// Variantes fonéticas que el reconocedor puede transcribir cuando se dice "VECTRA"
+const WAKE_WORDS = [
+  'vectra', 'vepra', 'bectra', 'bepra', 'vecta', 'betra', 'veptra', 'vector',
+  'vectra,', 'vectra.', 'ok vectra', 'oye vectra', 'hola vectra', 'hey vectra',
+  'ey vectra', 'actra', 'fetra', 'negra', 'letra', 'spetra', 'vek', 'vektra'
+];
 
 export class SpeechRecognitionService {
   constructor() {
@@ -38,6 +46,7 @@ export class SpeechRecognitionService {
     this.onFinalTranscript = null;   // (text: string)
     this.onError = null;             // (err: string)
     this.onStateChange = null;       // (listening: boolean)
+    this.onWakeWord = null;          // () => void — se dispara al detectar "VECTRA"
 
     // —— Config ——
     this.language = 'es-MX';
@@ -51,6 +60,13 @@ export class SpeechRecognitionService {
     this.speechFramesCount = 0;
     this.isGateOpen = false;
     this.onGateStateChange = null; // (open: boolean)
+
+    // —— Wake Word Engine (siempre escuchando en segundo plano) ——
+    this.wakeWordRecognition = null;   // Instancia separada de Web Speech API
+    this.wakeWordActive = false;       // ¿Está el motor de wake word escuchando?
+    this.wakeWordArmed = true;         // ¿Listo para disparar? Se desarma durante grabación Whisper
+    this.wakeWordRestartTimer = null;  // Timer para relanzar wakeWord si se cierra solo
+    this.isWakeWordMode = false;       // true = usa wake word en clase (sin push-to-talk)
 
     this._initWebSpeech();
     this.refreshDevices();
@@ -153,6 +169,141 @@ export class SpeechRecognitionService {
         try { this.recognition.start(); } catch {}
       }
     };
+  }
+
+  // ──────────────────────────────────────────────
+  // 2b. Wake Word Engine — "VECTRA" en segundo plano
+  // Motor ligero de detección de palabra de activación.
+  // Usa una instancia SEPARADA de Web Speech API en modo continuo
+  // que SOLO escucha la palabra "VECTRA" (y variantes fonéticas).
+  // Cuando la detecta, lanza automáticamente la grabación Whisper.
+  // ──────────────────────────────────────────────
+  startWakeWordEngine() {
+    const SpeechRecognition = typeof window !== 'undefined'
+      ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+      : null;
+    if (!SpeechRecognition) {
+      console.warn('[WakeWord] Web Speech API no disponible en este navegador.');
+      return;
+    }
+    if (this.wakeWordActive) return; // Ya está corriendo
+
+    this.isWakeWordMode = true;
+    this.wakeWordArmed = true;
+    this._launchWakeWordInstance();
+    console.log('[WakeWord] 🎙️ Motor de wake word "VECTRA" iniciado — siempre escuchando en segundo plano.');
+  }
+
+  _launchWakeWordInstance() {
+    if (!this.isWakeWordMode) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+      this.wakeWordRecognition = new SpeechRecognition();
+      this.wakeWordRecognition.continuous = true;
+      this.wakeWordRecognition.interimResults = true;
+      this.wakeWordRecognition.lang = this.language;
+      this.wakeWordRecognition.maxAlternatives = 3; // Más alternativas = más chances de detectar "VECTRA" con ruido
+
+      this.wakeWordActive = true;
+
+      this.wakeWordRecognition.onresult = (event) => {
+        if (!this.wakeWordArmed || this.isListening) return;
+
+        // Buscar la palabra clave en TODOS los resultados e hipótesis (incluso intermedios)
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          for (let a = 0; a < event.results[i].length; a++) {
+            const raw = event.results[i][a].transcript.toLowerCase().trim();
+            // Comprobar todas las variantes fonéticas de "VECTRA"
+            const detected = WAKE_WORDS.some((w) => raw.includes(w));
+            if (detected) {
+              console.log(`[WakeWord] ✅ Wake word detectado: "${raw}" → Iniciando grabación Whisper...`);
+              this._onWakeWordDetected();
+              return;
+            }
+          }
+        }
+      };
+
+      this.wakeWordRecognition.onerror = (event) => {
+        if (event.error === 'no-speech' || event.error === 'aborted') return;
+        console.warn('[WakeWord] Error:', event.error);
+        this.wakeWordActive = false;
+        // Reintentar automáticamente si el modo sigue activo
+        if (this.isWakeWordMode) {
+          clearTimeout(this.wakeWordRestartTimer);
+          this.wakeWordRestartTimer = setTimeout(() => this._launchWakeWordInstance(), 1200);
+        }
+      };
+
+      this.wakeWordRecognition.onend = () => {
+        this.wakeWordActive = false;
+        if (this.isWakeWordMode && !this.isListening) {
+          // Reinicar inmediatamente para que no haya gap de detección
+          clearTimeout(this.wakeWordRestartTimer);
+          this.wakeWordRestartTimer = setTimeout(() => this._launchWakeWordInstance(), 300);
+        }
+      };
+
+      this.wakeWordRecognition.start();
+    } catch (err) {
+      console.warn('[WakeWord] No se pudo iniciar:', err.message);
+      this.wakeWordActive = false;
+    }
+  }
+
+  _onWakeWordDetected() {
+    // Desarmar para no disparar doble mientras grabamos
+    this.wakeWordArmed = false;
+
+    // Notificar a la UI para mostrar feedback visual/sonoro de activación
+    if (this.onWakeWord) this.onWakeWord();
+
+    // Pausar el reconocedor de wake word durante la grabación
+    try { this.wakeWordRecognition?.abort(); } catch {}
+    this.wakeWordActive = false;
+
+    // Iniciar grabación Whisper completa
+    this.start().then(() => {
+      // Auto-detener tras 6 segundos de silencio (protección en clase ruidosa)
+      // El stop() real lo hace el usuario o el noise gate
+    }).catch((err) => {
+      console.warn('[WakeWord] Error al iniciar grabación tras wake word:', err);
+      this._rearmWakeWord();
+    });
+
+    // Auto-stop tras 7 segundos si el usuario no detuvo manualmente
+    clearTimeout(this._wakeAutoStopTimer);
+    this._wakeAutoStopTimer = setTimeout(() => {
+      if (this.isListening) {
+        console.log('[WakeWord] ⏱️ Auto-stop por timeout de 7s');
+        this.stop();
+      }
+    }, 7000);
+  }
+
+  _rearmWakeWord() {
+    clearTimeout(this._wakeAutoStopTimer);
+    this.wakeWordArmed = true;
+    if (this.isWakeWordMode && !this.isListening) {
+      // Relanzar el motor de escucha wake word
+      if (!this.wakeWordActive) {
+        clearTimeout(this.wakeWordRestartTimer);
+        this.wakeWordRestartTimer = setTimeout(() => this._launchWakeWordInstance(), 400);
+      }
+    }
+  }
+
+  stopWakeWordEngine() {
+    this.isWakeWordMode = false;
+    this.wakeWordArmed = false;
+    this.wakeWordActive = false;
+    clearTimeout(this.wakeWordRestartTimer);
+    clearTimeout(this._wakeAutoStopTimer);
+    try { this.wakeWordRecognition?.abort(); } catch {}
+    this.wakeWordRecognition = null;
+    console.log('[WakeWord] Motor de wake word detenido.');
   }
 
   // ──────────────────────────────────────────────
@@ -442,6 +593,11 @@ export class SpeechRecognitionService {
     }
 
     if (this.onStateChange) this.onStateChange(false);
+
+    // Si estábamos en modo wake word, re-armar el motor para escuchar el próximo "VECTRA"
+    if (this.isWakeWordMode) {
+      this._rearmWakeWord();
+    }
   }
 
   // ──────────────────────────────────────────────

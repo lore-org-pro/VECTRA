@@ -41,6 +41,8 @@ export default function App() {
   // 4. Control de Audio y Micrófono
   const [isListening, setIsListening] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isWakeWordMode, setIsWakeWordMode] = useState(false);
+  const [wakeWordPulse, setWakeWordPulse] = useState(false); // feedback visual al detectar "VECTRA"
 
   // 5. Telemetría de IA y Enrutador
   const [activeProvider, setActiveProvider] = useState('VECTRA AI');
@@ -489,6 +491,15 @@ export default function App() {
         }, 3500);
       }
     };
+
+    // Wake word callback — feedback visual/sonoro cuando se detecta "VECTRA"
+    speechService.onWakeWord = () => {
+      soundFX.playClick();
+      setWakeWordPulse(true);
+      setSystemState('escuchando');
+      setVectraSubtitle('🎙️ ¡Te escucho! Di tu pregunta...');
+      setTimeout(() => setWakeWordPulse(false), 1200);
+    };
   }, [handleProcessQuestion]);
 
   // Atajos de Teclado Globales (Barra Espaciadora para Push-to-Talk)
@@ -574,6 +585,23 @@ export default function App() {
       speechService.stop();
     }
   };
+
+  // Activar / Desactivar modo Wake Word "VECTRA" para clases con ruido de fondo
+  const handleToggleWakeWord = useCallback(() => {
+    if (isMicMuted) return; // No activar si el mic está silenciado
+    if (isWakeWordMode) {
+      speechService.stopWakeWordEngine();
+      setIsWakeWordMode(false);
+      setVectraSubtitle('Modo de clase desactivado. Usa Espacio o el botón para hablar.');
+      setTimeout(() => setVectraSubtitle(''), 3000);
+    } else {
+      speechService.startWakeWordEngine();
+      setIsWakeWordMode(true);
+      setVectraSubtitle('🏫 Modo Clase activado — Di "VECTRA" para activarme sin tocar nada.');
+      soundFX.playConfirm();
+      setTimeout(() => setVectraSubtitle((p) => p.startsWith('🏫') ? '' : p), 5000);
+    }
+  }, [isWakeWordMode, isMicMuted]);
 
   return (
     <div className="vectra-app-container relative w-screen h-screen flex flex-col justify-between select-none overflow-hidden bg-white text-slate-800">
@@ -1014,6 +1042,9 @@ export default function App() {
           micLabel={micLabel}
           availableMics={availableMics}
           onSwitchMic={handleSwitchMic}
+          isWakeWordMode={isWakeWordMode}
+          onToggleWakeWord={handleToggleWakeWord}
+          wakeWordPulse={wakeWordPulse}
         />
       </footer>
 
