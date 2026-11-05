@@ -14,7 +14,8 @@ export default function CartoonFace({
   emotion = 'neutral',
   viseme = 'closed',
   audioLevel = 0,
-  isSpeaking = false
+  isSpeaking = false,
+  dark = true
 }) {
   const containerRef = useRef(null);
   const [isBlinking, setIsBlinking] = useState(false);
@@ -97,9 +98,9 @@ export default function CartoonFace({
   const pupilOffsetX = isThinking ? 14 : 0;
   const pupilOffsetY = isThinking ? -18 : 0;
 
-  // Colores cartoon sólidos
-  const strokeColor = '#111827';
-  const browColor = '#111827';
+  // Colores dinámicos adaptados al modo oscuro cyber-glassmorphism
+  const strokeColor = dark ? '#f1f5f9' : '#111827';
+  const browColor = dark ? '#f8fafc' : '#111827';
 
   // Parámetros dinámicos de la boca animada
   const speechCadence = activelySpeaking ? (Math.sin(speechTick * 1.4) * 0.5 + 0.5) : 0;
@@ -122,15 +123,21 @@ export default function CartoonFace({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center select-none overflow-hidden bg-white"
+      className="relative w-full h-full flex items-center justify-center select-none overflow-hidden bg-transparent"
     >
       <svg
         viewBox="0 0 800 600"
-        className="w-full h-full max-w-4xl max-h-[85vh] drop-shadow-xl"
+        className="w-full h-full max-w-4xl max-h-[85vh] drop-shadow-2xl"
       >
         <defs>
           <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="#000000" floodOpacity="0.10" />
+            <feDropShadow 
+              dx="0" 
+              dy="4" 
+              stdDeviation={dark ? "6" : "10"} 
+              floodColor={dark ? "#38bdf8" : "#000000"} 
+              floodOpacity={dark ? "0.35" : "0.10"} 
+            />
           </filter>
 
           {/* Clip path para la cavidad bucal */}

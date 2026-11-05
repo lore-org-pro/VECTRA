@@ -18,8 +18,8 @@ export default function CartesianPlane2D({
 }) {
   const containerRef = useRef(null);
 
-  // Opciones de visualización
-  const [themeMode, setThemeMode] = useState('pizarron'); // 'pizarron' (verde escolar) | 'milimetrado' (papel) | 'oscuro' (cyber)
+  // Opciones de visualización (por defecto Cyber Dark Obsidian)
+  const [themeMode, setThemeMode] = useState('oscuro'); // 'oscuro' (cyber) | 'pizarron' (verde escolar) | 'milimetrado' (papel)
   const [showProjections, setShowProjections] = useState(true);
   const [showHeadToTail, setShowHeadToTail] = useState(false); // Método Cabeza-Cola
   const [showGridLabels, setShowGridLabels] = useState(true);

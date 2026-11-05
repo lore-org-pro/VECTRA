@@ -149,13 +149,22 @@ export default function ResultBoard({
   })();
 
   const cleanHeroMath = (() => {
-    let raw = res.latex || (metrics ? `\\vec{R} = ${metrics.canonical}` : '\\text{Completado}');
-    return raw
-      .replace(/\+\s*-\s*/g, '- ')
-      .replace(/\+\s*0\s*\\hat\{[ijk]\}/g, '')
-      .replace(/-\s*0\s*\\hat\{[ijk]\}/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    // Si tenemos métricas vectoriales, construir la igualdad canónica completa y nítida
+    if (metrics) {
+      return `\\vec{R} = ${metrics.canonical} = ${metrics.tuple}`;
+    }
+    if (res.latex && res.latex.trim().length > 1) {
+      let raw = res.latex.trim()
+        .replace(/\+\s*-\s*/g, '- ')
+        .replace(/\+\s*0\s*\\hat\{[ijk]\}/g, '')
+        .replace(/-\s*0\s*\\hat\{[ijk]\}/g, '')
+        .replace(/\s+/g, ' ');
+      return raw;
+    }
+    if (res.texto && res.texto.trim().length > 0) {
+      return `\\vec{R} = \\text{${cleanTextForDisplay(res.texto)}}`;
+    }
+    return '\\vec{R} = \\langle 0, 0 \\rangle';
   })();
 
   const harvardLecture = res.explicacionHarvard || (metrics ? (

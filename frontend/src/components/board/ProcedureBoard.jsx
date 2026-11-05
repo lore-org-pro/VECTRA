@@ -356,50 +356,38 @@ export default function ProcedureBoard({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-between p-3 sm:p-4 select-none relative overflow-hidden rounded-2xl shadow-2xl border-[10px] border-[#5a381d] bg-[#163824] text-white">
-      {/* Estilos globales de tiza para KaTeX con espaciado anti-clipping */}
+    <div className="w-full h-full flex flex-col justify-between p-4 sm:p-5 select-none relative overflow-hidden rounded-3xl bg-slate-950/80 backdrop-blur-2xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.55)] text-slate-100">
+      {/* Estilos globales neón para KaTeX con espaciado anti-clipping */}
       <style>{`
         .chalk-katex, .chalk-katex * {
-          color: #fefefe !important;
-          border-color: #fefefe !important;
-          text-shadow: 0 0 2px rgba(255, 255, 255, 0.8), 0 0 6px rgba(255, 255, 255, 0.35) !important;
+          color: #e0f2fe !important;
+          border-color: #38bdf8 !important;
+          text-shadow: 0 0 6px rgba(56, 189, 248, 0.6), 0 0 18px rgba(56, 189, 248, 0.25) !important;
         }
         .chalk-katex .katex-display {
           margin: 0.15em 0 !important;
         }
         .chalk-katex .katex {
-          font-size: clamp(1.15rem, 2.2vw, 1.85rem) !important;
+          font-size: clamp(1.2rem, 2.4vw, 2rem) !important;
           line-height: 1.35 !important;
         }
       `}</style>
 
-      {/* 1. Fondo de Pizarrón Verde Escolar con textura de tiza */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-90"
-        style={{
-          background: 'radial-gradient(circle at 50% 35%, #1f472e 0%, #153823 55%, #0d2417 100%)',
-          boxShadow: 'inset 0 0 45px rgba(0, 0, 0, 0.75)'
-        }}
-      />
-      {/* Manchas de polvo de borrador de tiza */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-10"
-        style={{
-          backgroundImage: 'radial-gradient(#fff 1.5px, transparent 1.5px), radial-gradient(#fff 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-          backgroundPosition: '0 0, 24px 24px'
-        }}
-      />
+      {/* ── FONDOS AMBIENTALES GLASSMORPHISM ── */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-cyan-500/12 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 -right-20 w-80 h-80 rounded-full bg-emerald-500/12 blur-3xl pointer-events-none" />
 
       {/* 2. Cabecera del Pizarrón: Título y Controles */}
-      <div className="relative z-10 flex items-center justify-between pb-2.5 border-b border-emerald-600/30">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">✎</span>
+      <div className="relative z-10 flex items-center justify-between pb-3 border-b border-white/10 gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-400/30 text-cyan-300">
+            <Sparkles className="w-4 h-4 animate-pulse" />
+          </div>
           <div>
-            <h2 className="text-base sm:text-lg font-bold tracking-wide text-amber-100" style={{ fontFamily: "'Patrick Hand', 'Caveat', cursive, sans-serif" }}>
-              {data.titulo || 'Pizarrón Escolar de Procedimiento'}
+            <h2 className="text-sm sm:text-base font-bold tracking-tight text-white font-sans">
+              {data.titulo || 'Procedimiento Matemático Paso a Paso'}
             </h2>
-            <div className="text-[11px] text-emerald-300/80 font-mono">
+            <div className="text-[11px] text-cyan-300/80 font-mono font-semibold">
               PASO {activeStepIndex + 1} DE {steps.length}
             </div>
           </div>
@@ -410,29 +398,29 @@ export default function ProcedureBoard({
           {/* Selector de Velocidad de Dibujo */}
           <button
             onClick={cycleSpeed}
-            className="px-2.5 py-1 rounded bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-100 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow"
-            title="Cambiar velocidad de dibujo de los números"
+            className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Cambiar velocidad de dibujo"
           >
-            <Gauge className="w-3 h-3 text-amber-300" />
+            <Gauge className="w-3.5 h-3.5 text-cyan-400" />
             <span>{speedConfig.label}</span>
           </button>
 
           <button
             onClick={handleReplay}
-            className="px-2.5 py-1 rounded bg-emerald-900/60 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-200 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer shadow"
-            title="Repetir dibujo de tiza"
+            className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Repetir paso"
           >
-            <RotateCcw className="w-3 h-3" />
+            <RotateCcw className="w-3.5 h-3.5 text-slate-300" />
             <span className="hidden sm:inline">Repetir</span>
           </button>
 
           {isWriting && (
             <button
               onClick={handleSkipAnimation}
-              className="px-2.5 py-1 rounded bg-amber-900/50 hover:bg-amber-800 border border-amber-500/40 text-amber-200 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer shadow"
+              className="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Mostrar todo de golpe"
             >
-              <FastForward className="w-3 h-3" />
+              <FastForward className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Ver Todo</span>
             </button>
           )}
@@ -469,14 +457,14 @@ export default function ProcedureBoard({
           </span>
         </div>
 
-        {/* Pizarra verde interior: Espacio amplio sin cortes en el borde superior */}
-        <div className="my-1.5 p-3 sm:p-5 rounded-xl bg-[#0e2719]/90 border-2 border-emerald-500/30 shadow-inner flex flex-col items-center justify-center min-h-[110px] relative overflow-x-auto overflow-y-visible">
-          {/* Mancha sutil de borrador de tiza */}
-          <div className="absolute inset-0 bg-white/[0.02] pointer-events-none rounded-xl" />
+        {/* Pizarra glass interior: Espacio amplio sin cortes en el borde superior */}
+        <div className="my-2 p-4 sm:p-6 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-cyan-400/30 shadow-[0_12px_36px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center min-h-[110px] relative overflow-x-auto overflow-y-visible">
+          {/* Brillo de borde superior sutil */}
+          <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
 
           {isSimpleMath ? (
             /* ========================================================
-               A) DIBUJO DESPACIO DE NÚMEROS Y SÍMBOLOS (PROFESOR CON TIZA)
+               A) DIBUJO DESPACIO DE NÚMEROS Y SÍMBOLOS
                ======================================================== */
             <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2.5 text-3xl sm:text-5xl md:text-6xl font-bold tracking-wider text-white py-1">
               {tokens.slice(0, tokenProgress).map((tok, i) => {
@@ -486,11 +474,11 @@ export default function ProcedureBoard({
                   <span
                     key={i}
                     className={`chalk-token-${i} inline-block mx-0.5 ${
-                      isOp ? 'text-amber-200 font-extrabold' : 'text-white font-bold'
+                      isOp ? 'text-cyan-300 font-extrabold' : 'text-white font-bold'
                     }`}
                     style={{
-                      fontFamily: "'Patrick Hand', 'Caveat', cursive, sans-serif",
-                      textShadow: '0 0 3px rgba(255,255,255,0.9), 0 0 8px rgba(255,255,255,0.4)'
+                      fontFamily: "'JetBrains Mono', 'Chakra Petch', sans-serif",
+                      textShadow: '0 0 6px rgba(56,189,248,0.7), 0 0 16px rgba(56,189,248,0.3)'
                     }}
                   >
                     {tok}
@@ -498,10 +486,10 @@ export default function ProcedureBoard({
                 );
               })}
 
-              {/* Cursor de tiza activa animada que dibuja los trazos */}
+              {/* Cursor activo animado que dibuja los trazos */}
               {tokenProgress < tokens.length && (
-                <span className="inline-flex items-center text-amber-300 animate-bounce text-2xl sm:text-4xl ml-2">
-                  ✎
+                <span className="inline-flex items-center text-cyan-400 animate-pulse text-2xl sm:text-4xl ml-2">
+                  |
                 </span>
               )}
             </div>
@@ -518,7 +506,7 @@ export default function ProcedureBoard({
               </div>
               {latexProgress < 100 && (
                 <span 
-                  className="absolute top-1/2 -translate-y-1/2 text-amber-300 text-xl animate-pulse pointer-events-none"
+                  className="absolute top-1/2 -translate-y-1/2 text-cyan-400 text-xl animate-pulse pointer-events-none"
                   style={{ left: `${Math.max(0, Math.min(95, latexProgress))}%` }}
                 >
                   ✎
@@ -528,32 +516,25 @@ export default function ProcedureBoard({
           )}
         </div>
 
-        {/* Explicación didáctica escrita como tiza en el pizarrón */}
-        <div className="mt-1.5 px-1 min-h-[32px] shrink-0">
-          <p 
-            className="text-xs sm:text-sm md:text-base text-emerald-100/90 leading-snug"
-            style={{ 
-              fontFamily: "'Patrick Hand', 'Caveat', cursive, sans-serif",
-              letterSpacing: '0.015em'
-            }}
-          >
-            {cleanTextForDisplay(writtenExplanation)}
-            {isWriting && writtenExplanation.length < (currentStep.explicacion || '').length && (
-              <span className="inline-block w-1.5 h-3.5 bg-amber-200 ml-1 animate-pulse" />
-            )}
-          </p>
-        </div>
+        {/* Explicación didáctica en tarjeta glass */}
+        {writtenExplanation && (
+          <div className="mt-2 p-3 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/10 shadow-md">
+            <p className="text-xs sm:text-sm text-slate-200 font-sans leading-relaxed">
+              {cleanTextForDisplay(writtenExplanation)}
+              {isWriting && writtenExplanation.length < (currentStep.explicacion || '').length && (
+                <span className="inline-block w-1.5 h-3.5 bg-cyan-400 ml-1 animate-pulse" />
+              )}
+            </p>
+          </div>
+        )}
 
         {/* Acceso al Pizarrón de Resultado Final (Al culminar los pasos) */}
         {isLastStep && onGoToResult && (
-          <div className="mt-2.5 p-2 sm:p-3 rounded-xl bg-amber-950/40 border border-amber-400/50 flex flex-wrap items-center justify-between gap-2 shadow-lg shrink-0">
+          <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-r from-cyan-500/15 to-emerald-500/15 border border-cyan-400/30 flex flex-wrap items-center justify-between gap-3 shadow-lg shrink-0">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              <span 
-                className="font-bold text-amber-200 text-xs sm:text-sm tracking-wide"
-                style={{ fontFamily: "'Patrick Hand', cursive" }}
-              >
-                Procedimiento completado. El resultado detallado está en el Pizarrón de Resultado.
+              <Sparkles className="w-4 h-4 text-cyan-300 animate-pulse" />
+              <span className="font-bold text-cyan-100 text-xs sm:text-sm tracking-wide font-sans">
+                Procedimiento completado. Puedes ver el análisis completo en el Pizarrón de Resultado.
               </span>
             </div>
 
@@ -562,23 +543,23 @@ export default function ProcedureBoard({
                 soundFX.playClick();
                 onGoToResult();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95 shrink-0"
             >
-              <span>Ver Pizarrón de Resultado</span>
+              <span>Ver Resultado Final</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
       </div>
 
-      {/* 4. Bandeja Inferior de Tizas de Madera y Borrador */}
-      <div className="relative z-10 pt-3 border-t border-emerald-600/30 flex flex-wrap items-center justify-between gap-3">
+      {/* 4. Barra Inferior de Navegación de Pasos */}
+      <div className="relative z-10 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
         {/* Navegación de Pasos */}
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrev}
             disabled={activeStepIndex === 0}
-            className="px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all shadow"
+            className="px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm active:scale-95"
             title="Paso anterior"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -588,7 +569,7 @@ export default function ProcedureBoard({
           {activeStepIndex < steps.length - 1 ? (
             <button
               onClick={handleNext}
-              className="px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow"
+              className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-100 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm active:scale-95"
               title="Paso siguiente"
             >
               <span>Siguiente</span>
@@ -600,7 +581,7 @@ export default function ProcedureBoard({
                 soundFX.playClick();
                 onGoToResult();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow animate-pulse"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-lg animate-pulse active:scale-95"
               title="Abrir Pizarrón de Resultado Final"
             >
               <span>Ver Resultado Final</span>
@@ -609,14 +590,8 @@ export default function ProcedureBoard({
           ) : null}
         </div>
 
-        {/* Bandeja de Tizas Decorativa */}
-        <div className="hidden sm:flex items-center gap-3 bg-[#42220e] px-4 py-1.5 rounded-md border border-[#6b3816] shadow-inner">
-          <div className="w-8 h-2 bg-slate-100 rounded-sm shadow-sm transform -rotate-2" title="Tiza blanca" />
-          <div className="w-6 h-2 bg-slate-200 rounded-sm shadow-sm transform rotate-1" title="Tiza blanca" />
-          <div className="w-7 h-2 bg-amber-200 rounded-sm shadow-sm transform -rotate-1" title="Tiza amarilla" />
-          <div className="flex flex-col items-center justify-center bg-[#8B5A2B] border border-[#5c3a1e] px-2 py-0.5 rounded shadow text-[9px] font-mono text-amber-100" title="Borrador de pizarra">
-            <span>BORRADOR</span>
-          </div>
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[10px] font-mono text-slate-400">
+          <span>VECTRA // Procedimiento Paso a Paso</span>
         </div>
       </div>
     </div>
