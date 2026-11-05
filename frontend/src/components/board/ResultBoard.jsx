@@ -61,7 +61,6 @@ export default function ResultBoard({
   procedureData = null,
   visualizationData = null,
   onGoBackToBoard,
-  onGoTo3D,
   onGoToPlane2D,
   onRepeatAudio
 }) {
@@ -199,10 +198,10 @@ export default function ResultBoard({
     }
   };
 
-  const has3D = visualizationData && 
-                visualizationData.tipo !== 'ninguna' && 
-                Array.isArray(visualizationData.vectores) && 
-                visualizationData.vectores.length > 0;
+  const hasVectors = visualizationData && 
+                     visualizationData.tipo !== 'ninguna' && 
+                     Array.isArray(visualizationData.vectores) && 
+                     visualizationData.vectores.length > 0;
 
   return (
     <div className="w-full h-full flex flex-col justify-between p-3.5 sm:p-5 select-none relative overflow-hidden rounded-2xl shadow-2xl border-[10px] border-[#532e18] bg-[#143220] text-white">
@@ -436,12 +435,11 @@ export default function ResultBoard({
             </button>
           )}
 
-          {has3D && (onGoToPlane2D || onGoTo3D) && (
+          {hasVectors && onGoToPlane2D && (
             <button
               onClick={() => {
                 soundFX.playClick();
-                if (onGoToPlane2D) onGoToPlane2D();
-                else if (onGoTo3D) onGoTo3D();
+                onGoToPlane2D();
               }}
               className="px-3.5 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 border border-cyan-400/50 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-lg animate-pulse"
               title="Explorar el resultado en el Plano Cartesiano interactivo"

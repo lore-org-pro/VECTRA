@@ -6,14 +6,13 @@ import CartoonFace from './components/face/CartoonFace';
 import ProcedureBoard from './components/board/ProcedureBoard';
 import ResultBoard from './components/board/ResultBoard';
 import { cleanTextForDisplay } from './utils/latexUtils';
-import VectorScene from './components/visualizer3d/VectorScene';
 import CartesianPlane2D from './components/visualizer2d/CartesianPlane2D';
 import PresenterPanel from './components/presenter/PresenterPanel';
 import { soundFX } from './utils/audioFX';
 import { speechService } from './services/speechRecognition';
 import { audioPlayer } from './services/audioPlayer';
 import { askVectra, fetchTTS } from './services/api';
-import { Mic, Sparkles, ArrowLeft, Sun, Moon, Volume2, Bot, Box, Layers, Trophy, Compass } from 'lucide-react';
+import { Mic, Sparkles, ArrowLeft, Sun, Moon, Volume2, Bot, Layers, Trophy, Compass } from 'lucide-react';
 
 export default function App() {
   // 1. Estados de Pantalla: 'face' (solo la cara en fondo blanco) | 'workspace' (cara + procedimiento con dígitos)
@@ -25,7 +24,7 @@ export default function App() {
     }
   });
 
-  // Modo de vista en Workspace: 'board' (Pizarrón completo) | 'visualizer3d' (Espacio 3D completo)
+  // Modo de vista en Workspace: 'board' (Pizarrón de pasos) | 'result' (Resultado de honor) | 'plane2d' (Plano Cartesiano 2D)
   const [workspaceView, setWorkspaceView] = useState('board');
 
   // Aviso discreto si el navegador (como Brave) bloquea el micrófono de Google
@@ -434,31 +433,33 @@ export default function App() {
         return;
       }
 
-      // Comandos por voz para alternar entre pizarra, plano 2D y 3D en modo workspace
+      // Comandos por voz para alternar entre pizarra y plano cartesiano en modo workspace
       const lowerVoice = text.toLowerCase().replace(/[.,?!]/g, '').trim();
       if (screenModeRef.current === 'workspace') {
-        if (/^(?:ver 2d|plano cartesiano|el plano|ver plano|ver simulacion|simulacion 2d|plano)$/i.test(lowerVoice)) {
+        if (/^(?:ver 2d|plano cartesiano|el plano|ver plano|ver simulacion|simulacion 2d|plano|ver 3d|mostrar 3d|espacio 3d|grafico|ejemplo visual|ver visual|ver ejemplo visual)$/i.test(lowerVoice)) {
           setWorkspaceView('plane2d');
           soundFX.playConfirm();
           return;
         }
-        if (/^(?:ver 3d|mostrar 3d|espacio 3d|grafico 3d|ejemplo visual|ver visual|ver ejemplo visual)$/i.test(lowerVoice)) {
-          setWorkspaceView('visualizer3d');
+        if (/^(?:ver pizarra|mostrar pizarra|volver a la pizarra|la pizarra|ver pasos|ver matematicas|volver al procedimiento)$/i.test(lowerVoice)) {
+          setWorkspaceView('board');
           soundFX.playConfirm();
           return;
         }
-        if (/^(?:ver pizarra|mostrar pizarra|volver a la pizarra|la pizarra|ver pasos|ver matematicas)$/i.test(lowerVoice)) {
-          setWorkspaceView('board');
+        if (/^(?:ver resultado|mostrar resultado|el resultado|resultado final)$/i.test(lowerVoice)) {
+          setWorkspaceView('result');
           soundFX.playConfirm();
           return;
         }
       }
 
-      // Procesar DIRECTAMENTE la pregunta hablada (sin requerir decir "vepra")
-      // Si por costumbre dijeron "vepra, 2 + 2", se limpia la palabra "vepra" automáticamente
-      const stripped = text
-        .replace(/^(?:hola\s+|oye\s+)?(?:vepra|vectra|bepra|bectra|vecta|betra|veptra)[\s,.:;¡!¿?]+/i, '')
-        .trim() || text;
+      // Procesar DIRECTAMENTE la pregunta hablada (sin requerir decir "vectra")
+      // Limpiar prefijos de aula ("oye vectra", "por favor suma", "bro calcula", etc.)
+      const cleanedVoice = text
+        .replace(/^(?:hola\s+|oye\s+|buenas\s+|bro\s+|amigo\s+)?(?:vepra|vectra|bepra|bectra|vecta|betra|veptra)[\s,.:;¡!¿?]+/i, '')
+        .replace(/^(?:por\s*favor\s+|puedes\s+|quiero\s+que\s+(?:me\s+)?(?:hagas|calcules|sumes|restes)\s+|haz\s+(?:la\s+)?(?:operacion|calculo)\s*(?:de)?\s*)+/i, '')
+        .trim();
+      const stripped = cleanedVoice || text;
 
       handleProcessQuestion(stripped);
     };
@@ -872,29 +873,12 @@ export default function App() {
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping shrink-0" />
                     )}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundFX.playClick();
-                      setWorkspaceView('visualizer3d');
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all cursor-pointer ${
-                      workspaceView === 'visualizer3d'
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                    }`}
-                    title="Ver representación en el espacio 3D"
-                  >
-                    <Box className="w-3.5 h-3.5 text-indigo-200" />
-                    <span>🌐 3D</span>
-                  </button>
                 </>
               )}
             </div>
 
-            {/* Texto resultado: SOLO visible en el último paso o en vista de simulación */}
-            {((activeStepIndex >= (procedureData?.pasos?.length || 1) - 1) || workspaceView === 'visualizer3d' || workspaceView === 'plane2d') && procedureData?.resultado?.texto && (
+            {/* Texto resultado: SOLO visible en el último paso o en vista de plano cartesiano */}
+            {((activeStepIndex >= (procedureData?.pasos?.length || 1) - 1) || workspaceView === 'plane2d') && procedureData?.resultado?.texto && (
               <span className="hidden xl:inline font-mono text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
                 ✓ {procedureData.resultado.texto}
               </span>
@@ -1008,7 +992,6 @@ export default function App() {
                     visualizationData={visualizationData}
                     onGoBackToBoard={() => setWorkspaceView('board')}
                     onGoToPlane2D={() => setWorkspaceView('plane2d')}
-                    onGoTo3D={() => setWorkspaceView('visualizer3d')}
                     onRepeatAudio={(customSpeech) => {
                       const textToSpeak = customSpeech || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto;
                       if (textToSpeak) {
@@ -1020,41 +1003,8 @@ export default function App() {
                     }}
                   />
                 </div>
-              ) : workspaceView === 'visualizer3d' ? (
-                /* 3) Espacio 3D a altura completa con toda su interactividad */
-                <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-slate-700/60 bg-slate-950 shadow-lg h-full relative flex flex-col">
-                  {visualizationData && visualizationData.tipo !== 'ninguna' ? (
-                    <VectorScene
-                      visualizationData={visualizationData}
-                      theme={theme}
-                      harvardLecture={procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard}
-                      onSpeakLecture={(customText) => {
-                        const textToSpeak = customText || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto;
-                        if (textToSpeak) {
-                          setVectraSubtitle(textToSpeak);
-                          fetchTTS(textToSpeak)
-                            .then(res => res?.audioUrl ? audioPlayer.playUrl(res.audioUrl) : audioPlayer.speakBrowser(textToSpeak))
-                            .catch(() => audioPlayer.speakBrowser(textToSpeak));
-                        }
-                      }}
-                      onGoBackToResult={() => setWorkspaceView('result')}
-                    />
-                  ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2 p-6 text-center">
-                      <Box className="w-10 h-10 text-slate-600" />
-                      <p className="font-mono text-sm text-slate-300">No hay datos geométricos tridimensionales para este cálculo.</p>
-                      <button
-                        type="button"
-                        onClick={() => setWorkspaceView('board')}
-                        className="px-4 py-1.5 rounded-full bg-emerald-700 text-white font-mono text-xs hover:bg-emerald-600 transition-all cursor-pointer mt-2"
-                      >
-                        Regresar al Pizarrón
-                      </button>
-                    </div>
-                  )}
-                </div>
               ) : (
-                /* 4) SIMULADOR EN PLANO CARTESIANO 2D (DEFAULT VISUALIZER) */
+                /* 3) SIMULADOR EN PLANO CARTESIANO 2D DE LA OPERACIÓN ACTUAL */
                 <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-slate-700/60 bg-slate-950 shadow-lg h-full relative flex flex-col">
                   <CartesianPlane2D
                     visualizationData={visualizationData}
@@ -1069,7 +1019,6 @@ export default function App() {
                       }
                     }}
                     onGoBackToResult={() => setWorkspaceView('result')}
-                    onSwitchTo3D={() => setWorkspaceView('visualizer3d')}
                   />
                 </div>
               )}
