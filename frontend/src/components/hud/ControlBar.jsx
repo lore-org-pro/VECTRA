@@ -25,9 +25,11 @@ export default function ControlBar({
     setInputText('');
   };
 
-  const handleMicPress = () => {
+  const handleMicPress = (e) => {
+    e.preventDefault();
+    if (e?.currentTarget?.blur) e.currentTarget.blur();
     soundFX.playClick();
-    onToggleMic();
+    if (onToggleMic) onToggleMic();
   };
 
   const stateLabel = {
@@ -73,13 +75,15 @@ export default function ControlBar({
           </svg>
 
           <button
+            type="button"
+            tabIndex="-1"
             onClick={handleMicPress}
             className={`relative p-3 rounded-full border transition-all cursor-pointer z-10 ${
               isListening
                 ? 'bg-red-500 border-red-600 text-white shadow-lg shadow-red-500/40 scale-105'
                 : 'bg-slate-900 border-cyan-500/40 text-cyan-300 hover:bg-slate-800 hover:border-cyan-400 shadow-sm'
             }`}
-            title={isListening ? 'Soltar para procesar...' : 'Activar Micrófono (o mantén Barra Espaciadora)'}
+            title="Mantén presionada la Barra Espaciadora [ESPACIO] para hablar y suelta para procesar"
           >
             {isListening ? <Mic className="w-5 h-5 text-white animate-pulse" /> : <MicOff className="w-5 h-5" />}
             {isListening && (
@@ -96,9 +100,16 @@ export default function ControlBar({
 
         <div className="flex flex-col text-xs font-sans">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-              {isListening ? 'CAPTURANDO VOZ' : isWakeWordMode ? 'DI "VECTRA"' : 'ESPACIO = HABLAR'}
-            </span>
+            {isListening ? (
+              <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white font-mono font-bold text-[10px] tracking-wide animate-pulse flex items-center gap-1 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                GRABANDO... (SUELTA ESPACIO PARA PROCESAR)
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-400/50 text-cyan-200 font-mono font-bold text-[10px] tracking-wide shadow-xs flex items-center gap-1">
+                ⌨️ [ ESPACIO ] MANTÉN PARA HABLAR
+              </span>
+            )}
             {isWireless && (
               <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-300">
                 <Radio className="w-2.5 h-2.5 text-emerald-600 animate-pulse" />

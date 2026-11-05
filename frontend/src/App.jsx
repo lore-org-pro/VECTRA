@@ -511,7 +511,10 @@ export default function App() {
     };
   }, [handleProcessQuestion]);
 
-  // Atajos de Teclado Globales (Barra Espaciadora para Push-to-Talk)
+  // Atajos de Teclado Globales: PTT EXCLUSIVO con la Barra Espaciadora
+  // Se desactiva la activación por ratón para eliminar errores de colisión y foco
+  const isSpacePressedRef = useRef(false);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -523,14 +526,23 @@ export default function App() {
         setShowPresenter((prev) => !prev);
       } else if (e.code === 'Space' && !e.repeat) {
         e.preventDefault();
+
+        // Desenfocar inmediatamente cualquier botón para que el navegador no lo active con Space
+        if (document.activeElement && document.activeElement !== document.body && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+
+        if (isSpacePressedRef.current) return;
+        isSpacePressedRef.current = true;
+
         if (!isMicMutedRef.current) {
           audioPlayer.stop();
           soundFX.playClick();
           setSystemState('escuchando');
-          // start() es ahora async (solicita micrófono) — no bloquea el handler
           speechService.start().catch((err) => {
             console.warn('[App] No se pudo iniciar micrófono:', err);
             setSystemState('reposo');
+            isSpacePressedRef.current = false;
           });
         }
       }
@@ -540,16 +552,27 @@ export default function App() {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') {
         e.preventDefault();
+        if (!isSpacePressedRef.current) return;
+        isSpacePressedRef.current = false;
         setSystemState('pensando');
+        speechService.stop();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      if (isSpacePressedRef.current) {
+        isSpacePressedRef.current = false;
         speechService.stop();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleWindowBlur);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleWindowBlur);
     };
   }, [handleReturnToFace]);
 
@@ -560,8 +583,6 @@ export default function App() {
         setIsStarted(true);
         soundFX.init();
         audioPlayer.init();
-        // NO iniciar micrófono automáticamente — el usuario debe presionar Espacio
-        // para que el navegador pueda conceder permisos dentro de un gesto del usuario
       }
     };
 
@@ -574,16 +595,14 @@ export default function App() {
     };
   }, [isStarted]);
 
-  // Alternar Micrófono manualmente (botón del HUD)
+  // Click en el icono de micrófono del HUD: Guía al usuario a usar la Barra Espaciadora
+  // para evitar fallos de colisión de mouse y foco en la feria
   const handleToggleMic = () => {
-    if (isListening) {
-      speechService.stop();
-    } else {
-      audioPlayer.stop();
-      speechService.start().catch((err) => {
-        console.warn('[App] Error al iniciar micrófono:', err);
-      });
-    }
+    soundFX.playClick();
+    setVectraSubtitle('🎙️ Mantén presionada la Barra Espaciadora [ESPACIO] para hablar y suéltala al terminar.');
+    setTimeout(() => {
+      setVectraSubtitle((prev) => (prev.startsWith('🎙️ Mantén') ? '' : prev));
+    }, 3500);
   };
 
   // Silenciador de emergencia (isMicMuted)

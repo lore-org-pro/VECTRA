@@ -130,31 +130,41 @@ export class AudioPlayerService {
         source.buffer = audioBuffer;
         source.playbackRate.value = this.rate;
 
-        // CADENA DSP CINEMATOGRÁFICA TIPO JARVIS (Ecualizador + Calidez + Compresor de Broadcast)
+        // CADENA DSP ACÚSTICA PARA FERIAS Y AULAS ESCOLARES (Potencia, Brillo y Compresión Broadcast)
+        // 1. Filtro paso alto para cortar retumbos graves de mesa y evitar distorsión en parlantes de laptop/proyector
+        const highPass = this.audioCtx.createBiquadFilter();
+        highPass.type = 'highpass';
+        highPass.frequency.value = 85;
+
+        // 2. Calidez vocal controlada (sin resonancia opaca)
         const bassWarmth = this.audioCtx.createBiquadFilter();
         bassWarmth.type = 'peaking';
-        bassWarmth.frequency.value = 190; // Resonancia pectoral cálida
-        bassWarmth.Q.value = 1.2;
-        bassWarmth.gain.value = 4.0; // +4 dB de presencia profunda
+        bassWarmth.frequency.value = 220;
+        bassWarmth.Q.value = 1.1;
+        bassWarmth.gain.value = 1.5;
 
+        // 3. Resaltado de formantes de inteligibilidad (3000 Hz) para atravesar murmullos escolares
         const voiceClarity = this.audioCtx.createBiquadFilter();
         voiceClarity.type = 'peaking';
-        voiceClarity.frequency.value = 2800; // Articulación fonética y claridad matemática
-        voiceClarity.Q.value = 1.0;
-        voiceClarity.gain.value = 2.2;
+        voiceClarity.frequency.value = 3000;
+        voiceClarity.Q.value = 1.2;
+        voiceClarity.gain.value = 5.5; // +5.5 dB de presencia para máxima inteligibilidad en aulas ruidosas
 
+        // 4. Compresor de emisión (Broadcast Leveler) que eleva sílabas suaves sin saturar
         const compressor = this.audioCtx.createDynamicsCompressor();
-        compressor.threshold.value = -22; // Nivel de corte
-        compressor.knee.value = 6;
-        compressor.ratio.value = 4;
-        compressor.attack.value = 0.004; // Respuesta ultra rápida
-        compressor.release.value = 0.18;
+        compressor.threshold.value = -18;
+        compressor.knee.value = 4;
+        compressor.ratio.value = 8;
+        compressor.attack.value = 0.002;
+        compressor.release.value = 0.12;
 
+        // 5. Ganancia de amplificación maestra para eventos escolares
         const gainNode = this.audioCtx.createGain();
-        gainNode.gain.value = this.volume;
+        gainNode.gain.value = Math.min(2.0, this.volume * 1.85); // Amplificación limpia de +5.3 dB
 
         // Conectar la cadena analítica completa
-        source.connect(bassWarmth);
+        source.connect(highPass);
+        highPass.connect(bassWarmth);
         bassWarmth.connect(voiceClarity);
         voiceClarity.connect(compressor);
         compressor.connect(this.analyser);
@@ -241,9 +251,9 @@ export class AudioPlayerService {
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'es-MX';
-        utterance.rate = 0.95;
-        utterance.pitch = 0.8;
-        utterance.volume = this.volume;
+        utterance.rate = 1.0; // Cadencia natural y enérgica
+        utterance.pitch = 1.02; // Tono claro y brillante para cortar el murmullo de sala
+        utterance.volume = 1.0; // Volumen al 100% máximo del sistema
 
         const voice = this.getBestSpanishVoice();
         if (voice) {
