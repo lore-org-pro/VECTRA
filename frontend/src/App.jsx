@@ -7,12 +7,13 @@ import ProcedureBoard from './components/board/ProcedureBoard';
 import ResultBoard from './components/board/ResultBoard';
 import { cleanTextForDisplay } from './utils/latexUtils';
 import VectorScene from './components/visualizer3d/VectorScene';
+import CartesianPlane2D from './components/visualizer2d/CartesianPlane2D';
 import PresenterPanel from './components/presenter/PresenterPanel';
 import { soundFX } from './utils/audioFX';
 import { speechService } from './services/speechRecognition';
 import { audioPlayer } from './services/audioPlayer';
 import { askVectra, fetchTTS } from './services/api';
-import { Mic, Sparkles, ArrowLeft, Sun, Moon, Volume2, Bot, Box, Layers, Trophy } from 'lucide-react';
+import { Mic, Sparkles, ArrowLeft, Sun, Moon, Volume2, Bot, Box, Layers, Trophy, Compass } from 'lucide-react';
 
 export default function App() {
   // 1. Estados de Pantalla: 'face' (solo la cara en fondo blanco) | 'workspace' (cara + procedimiento con dígitos)
@@ -54,10 +55,11 @@ export default function App() {
   const [userSubtitle, setUserSubtitle] = useState('');
   const [vectraSubtitle, setVectraSubtitle] = useState('¡Saludos! Soy VECTRA, sincronizado con la vanguardia de octubre de 2026. Ciencia, IA, física o álgebra vectorial... ¿En qué gran enigma nos sumergimos hoy?');
   const [suggestions, setSuggestions] = useState([
-    '¿Cuál es el último modelo de Google Gemini?',
-    '¿Qué has aprendido?',
-    'Suma los vectores (2, 3, -1) y (1, -4, 2)',
-    'Aprende que mi proyecto se llama Jarvis'
+    'Tipos de vectores',
+    '¿Qué es el plano cartesiano?',
+    'Suma los vectores (1, -4) y (4, -3)',
+    'Vectores opuestos',
+    '¿Cuál es el último modelo de Google Gemini?'
   ]);
   const [lastResultText, setLastResultText] = useState('');
 
@@ -253,9 +255,10 @@ export default function App() {
       const isMathProblem = !isGreeting && ((hasMathSteps && hasRealMathContent) || has3DVectors);
 
       if (isMathProblem) {
-        // Transición a la pantalla de trabajo iniciando SIEMPRE con el Pizarrón a pantalla completa
+        // Transición a la pantalla de trabajo
         setScreenMode('workspace');
-        setWorkspaceView('board');
+        const isPlanoOrTipos = /tipos?\s*de\s*vectores?|plano\s*cartesiano|vectores?\s*opuestos?|vectores?\s*iguales?|vectores?\s*equipolentes?|vectores?\s*paralelos?/i.test(cleanedText);
+        setWorkspaceView(isPlanoOrTipos ? 'plane2d' : 'board');
         setProcedureData(response);
         setVisualizationData(response.visualizacion);
         setActiveStepIndex(0);
@@ -431,9 +434,14 @@ export default function App() {
         return;
       }
 
-      // Comandos por voz para alternar entre pizarra y 3D en modo workspace
+      // Comandos por voz para alternar entre pizarra, plano 2D y 3D en modo workspace
       const lowerVoice = text.toLowerCase().replace(/[.,?!]/g, '').trim();
       if (screenModeRef.current === 'workspace') {
+        if (/^(?:ver 2d|plano cartesiano|el plano|ver plano|ver simulacion|simulacion 2d|plano)$/i.test(lowerVoice)) {
+          setWorkspaceView('plane2d');
+          soundFX.playConfirm();
+          return;
+        }
         if (/^(?:ver 3d|mostrar 3d|espacio 3d|grafico 3d|ejemplo visual|ver visual|ver ejemplo visual)$/i.test(lowerVoice)) {
           setWorkspaceView('visualizer3d');
           soundFX.playConfirm();
@@ -844,30 +852,49 @@ export default function App() {
               )}
 
               {visualizationData && visualizationData.tipo !== 'ninguna' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundFX.playClick();
-                    setWorkspaceView('visualizer3d');
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all cursor-pointer ${
-                    workspaceView === 'visualizer3d'
-                      ? 'bg-cyan-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                  }`}
-                  title="Ver representación visual en 3D interactivo"
-                >
-                  <Box className="w-3.5 h-3.5 text-cyan-200" />
-                  <span>🌐 Espacio 3D</span>
-                  {workspaceView !== 'visualizer3d' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping shrink-0" />
-                  )}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFX.playClick();
+                      setWorkspaceView('plane2d');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all cursor-pointer ${
+                      workspaceView === 'plane2d'
+                        ? 'bg-cyan-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                    title="Ver simulación interactiva en el Plano Cartesiano 2D"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-cyan-200" />
+                    <span>📐 Plano Cartesiano</span>
+                    {workspaceView !== 'plane2d' && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping shrink-0" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFX.playClick();
+                      setWorkspaceView('visualizer3d');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all cursor-pointer ${
+                      workspaceView === 'visualizer3d'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                    title="Ver representación en el espacio 3D"
+                  >
+                    <Box className="w-3.5 h-3.5 text-indigo-200" />
+                    <span>🌐 3D</span>
+                  </button>
+                </>
               )}
             </div>
 
-            {/* Texto resultado: SOLO visible en el último paso o en vista 3D */}
-            {((activeStepIndex >= (procedureData?.pasos?.length || 1) - 1) || workspaceView === 'visualizer3d') && procedureData?.resultado?.texto && (
+            {/* Texto resultado: SOLO visible en el último paso o en vista de simulación */}
+            {((activeStepIndex >= (procedureData?.pasos?.length || 1) - 1) || workspaceView === 'visualizer3d' || workspaceView === 'plane2d') && procedureData?.resultado?.texto && (
               <span className="hidden xl:inline font-mono text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
                 ✓ {procedureData.resultado.texto}
               </span>
@@ -980,9 +1007,10 @@ export default function App() {
                     procedureData={procedureData}
                     visualizationData={visualizationData}
                     onGoBackToBoard={() => setWorkspaceView('board')}
+                    onGoToPlane2D={() => setWorkspaceView('plane2d')}
                     onGoTo3D={() => setWorkspaceView('visualizer3d')}
                     onRepeatAudio={(customSpeech) => {
-                      const textToSpeak = customSpeech || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto;
+                      const textToSpeak = customSpeech || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto;
                       if (textToSpeak) {
                         setVectraSubtitle(textToSpeak);
                         fetchTTS(textToSpeak)
@@ -992,16 +1020,16 @@ export default function App() {
                     }}
                   />
                 </div>
-              ) : (
+              ) : workspaceView === 'visualizer3d' ? (
                 /* 3) Espacio 3D a altura completa con toda su interactividad */
                 <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-slate-700/60 bg-slate-950 shadow-lg h-full relative flex flex-col">
                   {visualizationData && visualizationData.tipo !== 'ninguna' ? (
                     <VectorScene
                       visualizationData={visualizationData}
                       theme={theme}
-                      harvardLecture={procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || speechText}
+                      harvardLecture={procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard}
                       onSpeakLecture={(customText) => {
-                        const textToSpeak = customText || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto || speechText;
+                        const textToSpeak = customText || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto;
                         if (textToSpeak) {
                           setVectraSubtitle(textToSpeak);
                           fetchTTS(textToSpeak)
@@ -1024,6 +1052,25 @@ export default function App() {
                       </button>
                     </div>
                   )}
+                </div>
+              ) : (
+                /* 4) SIMULADOR EN PLANO CARTESIANO 2D (DEFAULT VISUALIZER) */
+                <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-slate-700/60 bg-slate-950 shadow-lg h-full relative flex flex-col">
+                  <CartesianPlane2D
+                    visualizationData={visualizationData}
+                    procedureData={procedureData}
+                    onSpeakLecture={(customText) => {
+                      const textToSpeak = customText || procedureData?.resultado?.explicacionFacil || procedureData?.resultado?.explicacionHarvard || procedureData?.resultado?.texto;
+                      if (textToSpeak) {
+                        setVectraSubtitle(textToSpeak);
+                        fetchTTS(textToSpeak)
+                          .then(res => res?.audioUrl ? audioPlayer.playUrl(res.audioUrl) : audioPlayer.speakBrowser(textToSpeak))
+                          .catch(() => audioPlayer.speakBrowser(textToSpeak));
+                      }
+                    }}
+                    onGoBackToResult={() => setWorkspaceView('result')}
+                    onSwitchTo3D={() => setWorkspaceView('visualizer3d')}
+                  />
                 </div>
               )}
             </div>

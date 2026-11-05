@@ -62,6 +62,7 @@ export default function ResultBoard({
   visualizationData = null,
   onGoBackToBoard,
   onGoTo3D,
+  onGoToPlane2D,
   onRepeatAudio
 }) {
   const [copied, setCopied] = useState(false);
@@ -435,17 +436,18 @@ export default function ResultBoard({
             </button>
           )}
 
-          {has3D && onGoTo3D && (
+          {has3D && (onGoToPlane2D || onGoTo3D) && (
             <button
               onClick={() => {
                 soundFX.playClick();
-                onGoTo3D();
+                if (onGoToPlane2D) onGoToPlane2D();
+                else if (onGoTo3D) onGoTo3D();
               }}
               className="px-3.5 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 border border-cyan-400/50 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-lg animate-pulse"
-              title="Explorar el resultado en el espacio tridimensional 3D"
+              title="Explorar el resultado en el Plano Cartesiano interactivo"
             >
-              <Box className="w-3.5 h-3.5 text-cyan-200" />
-              <span>Explorar en Espacio 3D</span>
+              <Compass className="w-3.5 h-3.5 text-cyan-200" />
+              <span>Ver en Plano Cartesiano</span>
             </button>
           )}
         </div>

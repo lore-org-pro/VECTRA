@@ -1,35 +1,62 @@
 // ========================================================
-// VECTRA // FRONTEND HTTP CLIENT
+// VECTRA // FRONTEND HTTP CLIENT (CON MOTOR LOCAL OFFLINE RESILIENTE)
 // ========================================================
+import { localMathSolver } from './localMathSolver.js';
 
 const API_BASE = '/api';
 
 export async function askVectra(message, history = [], forcedProviderId = null) {
-  const response = await fetch(`${API_BASE}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, history, forcedProviderId })
-  });
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500); // 6.5s timeout max
 
-  if (!response.ok) {
+    const response = await fetch(`${API_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, history, forcedProviderId }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      return await response.json();
+    }
+
+    // Si la API remota devuelve error (429 rate limit, 500, etc.), recurrir al motor local
+    console.warn(`[VECTRA] API devolvió HTTP ${response.status}. Activando motor local offline...`);
+    const local = localMathSolver.solve(message);
+    if (local) return local;
+
     throw new Error(`HTTP error ${response.status}`);
+  } catch (err) {
+    console.warn('[VECTRA] Modo local offline activado por falla de red/API:', err.message);
+    const local = localMathSolver.solve(message);
+    if (local) return local;
+    throw err;
   }
-
-  return response.json();
 }
 
 export async function fetchTTS(text) {
-  const response = await fetch(`${API_BASE}/tts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
-  });
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-  if (!response.ok) {
+    const response = await fetch(`${API_BASE}/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return { fallbackToBrowserSpeech: true, text };
+    }
+
+    return await response.json();
+  } catch {
     return { fallbackToBrowserSpeech: true, text };
   }
-
-  return response.json();
 }
 
 export async function getProvidersTelemetry() {
