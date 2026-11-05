@@ -64,43 +64,63 @@ export class AudioPlayerService {
   }
 
   getBestSpanishVoice() {
-    const voices = this.availableVoices || [];
-    if (voices.length === 0 && window.speechSynthesis) {
-      this.availableVoices = window.speechSynthesis.getVoices() || [];
+    let voices = [];
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        voices = window.speechSynthesis.getVoices() || [];
+        if (voices.length > 0) {
+          this.availableVoices = voices;
+        }
+      } catch {}
+    }
+    if (voices.length === 0) {
+      voices = this.availableVoices || [];
     }
 
-    const maleKeywords = ['raul', 'pablo', 'jorge', 'diego', 'alvaro', 'enrique', 'carlos', 'mateo', 'miguel', 'david', 'manuel', 'antonio', 'pedro', 'juan', 'male', 'hombre'];
+    // Filtrar estrictamente voces en español (lang empieza con 'es' o nombre incluye spanish/español)
+    const spanishVoices = voices.filter((v) => {
+      const lang = (v.lang || '').toLowerCase();
+      const name = (v.name || '').toLowerCase();
+      // Descartar categóricamente voces en inglés u otros idiomas
+      if (lang.startsWith('en') || lang.startsWith('fr') || lang.startsWith('de') || lang.startsWith('pt')) return false;
+      return lang.startsWith('es') || name.includes('spanish') || name.includes('español');
+    });
+
+    if (spanishVoices.length === 0) {
+      return null;
+    }
+
+    // 1. Voces neurales / naturales de alta calidad de Microsoft o Google en español latinoamericano (es-MX / es-US / es-419)
+    const naturalLatin = spanishVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      const lang = v.lang.toLowerCase();
+      const isLatin = lang.includes('mx') || lang.includes('us') || lang.includes('419') || lang.includes('co') || lang.includes('ar');
+      const isNatural = name.includes('natural') || name.includes('online') || name.includes('google');
+      return isLatin && isNatural;
+    });
+    if (naturalLatin) return naturalLatin;
+
+    // 2. Voces masculinas en español (Jorge, Raul, Pablo, Diego, etc.)
+    const maleKeywords = ['jorge', 'raul', 'pablo', 'diego', 'alvaro', 'enrique', 'carlos', 'mateo', 'miguel', 'david', 'manuel', 'antonio', 'pedro', 'juan', 'male', 'hombre'];
     const femaleKeywords = ['sabina', 'paulina', 'helena', 'monica', 'laura', 'elena', 'lucia', 'victoria', 'mia', 'sofia', 'zira', 'eva', 'hilda', 'female', 'mujer'];
 
-    // 1. Prioridad: Voz en español expresamente masculina
-    const explicitMaleEs = this.availableVoices.find((v) => {
+    const maleEs = spanishVoices.find((v) => {
       const name = v.name.toLowerCase();
-      const lang = v.lang.toLowerCase();
-      const isEs = lang.startsWith('es') || name.includes('spanish') || name.includes('español');
       const isMale = maleKeywords.some((k) => name.includes(k));
       const isFemale = femaleKeywords.some((k) => name.includes(k));
-      return isEs && isMale && !isFemale;
+      return isMale && !isFemale;
     });
-    if (explicitMaleEs) return explicitMaleEs;
+    if (maleEs) return maleEs;
 
-    // 2. Prioridad: Voz en español que NO tenga nombre femenino
-    const nonFemaleEs = this.availableVoices.find((v) => {
-      const name = v.name.toLowerCase();
+    // 3. Voces mexicanas o latinoamericanas generales
+    const latinEs = spanishVoices.find((v) => {
       const lang = v.lang.toLowerCase();
-      const isEs = lang.startsWith('es') || name.includes('spanish') || name.includes('español');
-      const isFemale = femaleKeywords.some((k) => name.includes(k));
-      return isEs && !isFemale;
+      return lang.includes('mx') || lang.includes('us') || lang.includes('419');
     });
-    if (nonFemaleEs) return nonFemaleEs;
+    if (latinEs) return latinEs;
 
-    // 3. Cualquier voz en español
-    const anyEsVoice = this.availableVoices.find(
-      (v) =>
-        v.lang.toLowerCase().startsWith('es') ||
-        v.name.toLowerCase().includes('spanish') ||
-        v.name.toLowerCase().includes('español')
-    );
-    return anyEsVoice || null;
+    // 4. Cualquier voz en español garantizada
+    return spanishVoices[0] || null;
   }
 
   /**

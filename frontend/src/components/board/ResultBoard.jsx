@@ -2,27 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import katex from 'katex';
 import confetti from 'canvas-confetti';
 import { 
-  Trophy, 
   Sparkles, 
   Copy, 
   Check, 
-  Box, 
-  ArrowLeft, 
   RotateCcw, 
   Compass, 
   Calculator, 
   Layers,
   Award,
-  GraduationCap,
-  Volume2
+  Volume2,
+  ArrowLeft,
+  Activity
 } from 'lucide-react';
 import { soundFX } from '../../utils/audioFX';
 import { cleanAndSanitizeLaTeX, cleanTextForDisplay, formatFallbackMath } from '../../utils/latexUtils';
 
 /**
- * Renderizador KaTeX con estilo de tiza dorada/blanca brillante de honor
+ * Renderizador KaTeX con resplandor neón holográfico cian/esmeralda
  */
-function GoldChalkKaTeX({ math = '', block = true, isHero = false }) {
+function LuminousGlassKaTeX({ math = '', block = true, isHero = false }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -52,7 +50,7 @@ function GoldChalkKaTeX({ math = '', block = true, isHero = false }) {
   return (
     <span 
       ref={containerRef} 
-      className={`${block ? 'block my-1' : 'inline'} gold-chalk-katex text-amber-100 ${isHero ? 'hero-math' : ''}`} 
+      className={`${block ? 'block my-1' : 'inline'} luminous-glass-katex ${isHero ? 'hero-glass-math' : ''}`} 
     />
   );
 }
@@ -72,15 +70,13 @@ export default function ResultBoard({
     texto: 'Resultado analítico completado.'
   };
 
-  // Extraer el vector resultante si existe para calcular métricas de honor
+  // Extraer el vector resultante si existe para calcular métricas
   const resultVec = (() => {
-    // 1. Buscar en visualizacion.vectores el último o el llamado R
     if (visualizationData && Array.isArray(visualizationData.vectores) && visualizationData.vectores.length > 0) {
       const foundR = visualizationData.vectores.find(v => v.nombre === 'R' || v.nombre === 'Resultante' || v.nombre === 'Diferencia');
       if (foundR) return foundR.componentes;
       return visualizationData.vectores[visualizationData.vectores.length - 1].componentes;
     }
-    // 2. Extraer números de la tupla o texto si coinciden 2 o 3 números
     const clean = cleanTextForDisplay(res.texto || res.latex || '');
     const tupleMatch = clean.match(/\((-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)(?:\s*,\s*(-?\d+(?:\.\d+)?))?\)/);
     if (tupleMatch) {
@@ -110,12 +106,10 @@ export default function ResultBoard({
         : [round2(x / mag), round2(y / mag), round2(z / mag)];
     }
 
-    // Ángulos directores
     const alpha = mag > 0 ? round2(Math.acos(Math.max(-1, Math.min(1, x / mag))) * (180 / Math.PI)) : 0;
     const beta = mag > 0 ? round2(Math.acos(Math.max(-1, Math.min(1, y / mag))) * (180 / Math.PI)) : 0;
     const gamma = (!is2D && mag > 0) ? round2(Math.acos(Math.max(-1, Math.min(1, z / mag))) * (180 / Math.PI)) : null;
 
-    // Notación canónica limpia (sin "+ -", con coeficientes 1 simplificados)
     const parts = [];
     if (x !== 0) {
       parts.push(`${x === 1 ? '' : x === -1 ? '-' : x}\\hat{i}`);
@@ -154,7 +148,6 @@ export default function ResultBoard({
     };
   })();
 
-  // KaTeX limpio del héroe: purgar cualquier "+ -" o "+ 0k"
   const cleanHeroMath = (() => {
     let raw = res.latex || (metrics ? `\\vec{R} = ${metrics.canonical}` : '\\text{Completado}');
     return raw
@@ -165,25 +158,23 @@ export default function ResultBoard({
       .trim();
   })();
 
-  // Cátedra analítica formal estilo profesor de Harvard
   const harvardLecture = res.explicacionHarvard || (metrics ? (
-    `Cátedra de Álgebra Lineal: el vector resultante es R = ${metrics.canonical.replace(/\\hat\{([ijk])\}/g, '$1')}. ` +
-    `En el espacio euclidiano presenta una componente de ${resultVec[0]} en la abscisa X y ${resultVec[1]} en la ordenada Y${resultVec[2] ? ' con cota ' + resultVec[2] + ' en Z' : ''}. ` +
-    `Su norma euclidiana invariante es de exactamente ||R|| = √${metrics.magSq} ≈ ${metrics.mag} unidades, orientado con ángulos directores de ` +
-    `α = ${metrics.alpha} grados y β = ${metrics.beta} grados, satisfaciendo con rigor la superposición euclidiana.`
+    `Vector resultante: R = ${metrics.canonical.replace(/\\hat\{([ijk])\}/g, '$1')}. ` +
+    `En el plano cartesiano se compone de ${resultVec[0]} unidades en X y ${resultVec[1]} unidades en Y${resultVec[2] ? ' con cota ' + resultVec[2] + ' en Z' : ''}. ` +
+    `Su longitud o módulo euclidiano es ||R|| = √${metrics.magSq} ≈ ${metrics.mag} unidades, con dirección a α = ${metrics.alpha}° respecto al eje X.`
   ) : (res.texto || 'Solución analítica rigurosamente verificada.'));
 
-  // Lanzar celebración al abrir el pizarrón de honor
+  // Confetti sutil de felicitación
   useEffect(() => {
     soundFX.playConfirm();
     try {
       confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.65, x: 0.6 },
-        colors: ['#fef08a', '#facc15', '#34d399', '#38bdf8', '#ffffff'],
+        particleCount: 45,
+        spread: 70,
+        origin: { y: 0.6, x: 0.5 },
+        colors: ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#ffffff'],
         disableForReducedMotion: true,
-        ticks: 120
+        ticks: 100
       });
     } catch {}
   }, []);
@@ -204,261 +195,248 @@ export default function ResultBoard({
                      visualizationData.vectores.length > 0;
 
   return (
-    <div className="w-full h-full flex flex-col justify-between p-3.5 sm:p-5 select-none relative overflow-hidden rounded-2xl shadow-2xl border-[10px] border-[#532e18] bg-[#143220] text-white">
-      {/* Estilos de tiza de honor para KaTeX */}
+    <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 select-none relative overflow-hidden rounded-3xl bg-slate-950/80 backdrop-blur-2xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.55)] text-slate-100">
+      
+      {/* Estilos KaTeX Neón Holográfico */}
       <style>{`
-        .gold-chalk-katex, .gold-chalk-katex * {
-          color: #fef9c3 !important;
-          border-color: #fef08a !important;
-          text-shadow: 0 0 3px rgba(254, 240, 138, 0.85), 0 0 10px rgba(254, 240, 138, 0.35) !important;
+        .luminous-glass-katex, .luminous-glass-katex * {
+          color: #e0f2fe !important;
+          border-color: #38bdf8 !important;
+          text-shadow: 0 0 6px rgba(56, 189, 248, 0.65), 0 0 20px rgba(56, 189, 248, 0.25) !important;
         }
-        .hero-math .katex {
-          font-size: clamp(1.4rem, 3.2vw, 2.5rem) !important;
-          line-height: 1.4 !important;
+        .hero-glass-math .katex {
+          font-size: clamp(1.6rem, 3.6vw, 2.75rem) !important;
+          line-height: 1.35 !important;
+          font-weight: 700 !important;
         }
       `}</style>
 
-      {/* 1. Fondo de Pizarra Verde Oscuro con Marco Escolar Enriquecido */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-95"
-        style={{
-          background: 'radial-gradient(circle at 50% 30%, #1e452b 0%, #12301c 60%, #0a1f12 100%)',
-          boxShadow: 'inset 0 0 50px rgba(0, 0, 0, 0.85)'
-        }}
-      />
-      {/* Textura de motas de tiza de pizarra */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-10"
-        style={{
-          backgroundImage: 'radial-gradient(#fff 1.5px, transparent 1.5px), radial-gradient(#fff 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-          backgroundPosition: '0 0, 20px 20px'
-        }}
-      />
+      {/* ── FONDOS AMBIENTALES GLASSMORPHISM (Luces Difusas Suaves) ── */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 left-1/3 w-72 h-72 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
 
-      {/* 2. Cabecera del Pizarrón de Resultado */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between pb-3 border-b-2 border-amber-500/40 gap-2">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300">
-            <Trophy className="w-5 h-5" />
+      {/* 1. CABECERA HOLOGRÁFICA VIDRIO PULIDO */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between pb-3.5 border-b border-white/10 gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-cyan-500/25 to-blue-600/15 border border-cyan-400/30 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] flex items-center justify-center">
+            <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 
-                className="text-base sm:text-xl font-bold tracking-wide text-amber-200"
-                style={{ fontFamily: "'Patrick Hand', 'Caveat', cursive, sans-serif" }}
-              >
-                Pizarrón de Resultado Final
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-white font-sans">
+                Resultado de la Operación
               </h2>
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                <Sparkles className="w-2.5 h-2.5" /> Solución Definitiva
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                100% Verificado
               </span>
             </div>
-            <p className="text-[11px] text-emerald-300/80 font-mono">
-              {data.titulo || 'Cálculo Vectorial Riguroso'} • 100% Verificado
+            <p className="text-xs text-slate-400 font-sans mt-0.5">
+              {data.titulo || 'Cálculo Vectorial Preciso'} • Solución definitiva
             </p>
           </div>
         </div>
 
-        {/* Acciones de Cabecera: Copiar y Repetir */}
+        {/* Acciones Rápidas Glass */}
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleCopyLatex}
-            className="px-2.5 py-1 rounded bg-emerald-950/80 hover:bg-emerald-900 border border-amber-400/40 text-amber-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow"
-            title="Copiar fórmula LaTeX al portapapeles"
+            className="px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 hover:border-cyan-400/40 text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Copiar fórmula LaTeX"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copiado' : 'Copiar LaTeX'}</span>
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-300" />}
+            <span>{copied ? '¡Copiado!' : 'Copiar LaTeX'}</span>
           </button>
 
           {onRepeatAudio && (
             <button
+              type="button"
               onClick={() => {
                 soundFX.playClick();
-                onRepeatAudio();
+                onRepeatAudio(res.explicacionFacil || harvardLecture);
               }}
-              className="px-2.5 py-1 rounded bg-emerald-900/60 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-200 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer shadow"
-              title="Escuchar explicación de nuevo"
+              className="px-3.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/30 text-cyan-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Escuchar explicación en voz alta"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <Volume2 className="w-3.5 h-3.5 text-cyan-300" />
               <span className="hidden sm:inline">Repetir Voz</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* 3. Área Central: Gran Expositor de la Solución Final */}
-      <div className="relative z-10 flex-1 flex flex-col justify-start py-2.5 gap-2.5 overflow-y-auto">
+      {/* 2. ÁREA CENTRAL: TARJETA HERO GLASSMORPHISM + MÉTRICAS */}
+      <div className="relative z-10 flex-1 flex flex-col justify-start py-3 gap-3 overflow-y-auto pr-1">
         
-        {/* A) CAJA PRINCIPAL DE RESULTADO EN TIZA DE ORO */}
-        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#092113]/95 border-2 border-amber-400/60 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden">
-          {/* Resplandor áureo sutil */}
-          <div className="absolute inset-0 bg-radial from-amber-400/10 via-transparent to-transparent pointer-events-none" />
+        {/* A) HERO CARD — EL RESULTADO PRINCIPAL FLOTANTE */}
+        <div className="relative p-5 sm:p-7 rounded-3xl bg-gradient-to-b from-white/[0.09] to-white/[0.02] border border-white/20 shadow-[0_12px_40px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center overflow-hidden">
+          {/* Brillo de borde superior */}
+          <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+          
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-[11px] font-mono uppercase tracking-wider mb-2 font-semibold">
+            <Activity className="w-3 h-3 text-cyan-400" />
+            <span>Vector Resultante Final</span>
+          </div>
 
-          <span 
-            className="text-xs sm:text-sm font-bold text-amber-300 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
-            style={{ fontFamily: "'Patrick Hand', cursive" }}
-          >
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-            Valor del Vector Resultante:
-          </span>
-
-          <div className="py-2 px-3 text-center max-w-full overflow-x-auto overflow-y-visible">
-            <GoldChalkKaTeX 
+          {/* Gran Fórmula KaTeX Neón */}
+          <div className="py-2.5 px-4 text-center max-w-full overflow-x-auto overflow-y-visible">
+            <LuminousGlassKaTeX 
               math={cleanHeroMath} 
               block={true}
               isHero={true}
             />
           </div>
 
-          {/* Síntesis textual didáctica */}
+          {/* Resumen textual amigable en píldora translúcida */}
           {res.texto && (
-            <p 
-              className="mt-1 text-center text-sm sm:text-base text-amber-100/90 max-w-2xl px-2"
-              style={{ fontFamily: "'Patrick Hand', 'Caveat', cursive, sans-serif" }}
-            >
+            <div className="mt-2 px-4 py-1.5 rounded-full bg-slate-900/60 border border-white/10 text-center text-xs sm:text-sm text-slate-300 max-w-xl font-sans font-medium">
               {cleanTextForDisplay(res.texto)}
-            </p>
+            </div>
           )}
         </div>
 
-        {/* B) TARJETAS DE NOTACIÓN Y MÉTRICAS VECTORIALES (Si hay coordenadas) */}
+        {/* B) CUADRÍCULA DE 3 TARJETAS GLASS DE MÉTRICAS */}
         {metrics && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {/* 1. Notación Canónica */}
-            <div className="p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 flex flex-col justify-between shadow-md">
-              <div className="flex items-center justify-between text-[11px] font-mono text-emerald-300 font-bold uppercase tracking-wider mb-1">
-                <span>Base Canónica ({metrics.is2D ? 'i, j' : 'i, j, k'})</span>
-                <Layers className="w-3 h-3 text-emerald-400" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {/* 1. Base Canónica */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 hover:border-cyan-400/30 transition-all flex flex-col justify-between shadow-md">
+              <div className="flex items-center justify-between text-[11px] font-mono text-cyan-300 font-bold uppercase tracking-wider mb-1">
+                <span>Base Canónica ({metrics.is2D ? 'î, ĵ' : 'î, ĵ, k̂'})</span>
+                <Layers className="w-3.5 h-3.5 text-cyan-400" />
               </div>
               <div className="py-1 text-center overflow-x-auto">
-                <GoldChalkKaTeX math={`\\vec{R} = ${metrics.canonical}`} block={false} />
+                <LuminousGlassKaTeX math={`\\vec{R} = ${metrics.canonical}`} block={false} />
               </div>
-              <span className="text-[10px] text-emerald-200/70 font-mono text-center">
-                Coordenadas: {metrics.coords}
-              </span>
+              <div className="text-[10px] text-slate-400 font-mono text-center pt-1 border-t border-white/5">
+                Punto: <span className="text-cyan-300 font-semibold">{metrics.coords}</span>
+              </div>
             </div>
 
-            {/* 2. Módulo / Magnitud */}
-            <div className="p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 flex flex-col justify-between shadow-md">
+            {/* 2. Módulo / Longitud */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 hover:border-amber-400/30 transition-all flex flex-col justify-between shadow-md">
               <div className="flex items-center justify-between text-[11px] font-mono text-amber-300 font-bold uppercase tracking-wider mb-1">
                 <span>Módulo / Longitud</span>
-                <Calculator className="w-3 h-3 text-amber-400" />
+                <Calculator className="w-3.5 h-3.5 text-amber-400" />
               </div>
               <div className="py-1 text-center overflow-x-auto">
-                <GoldChalkKaTeX math={`|\\vec{R}| = \\sqrt{${metrics.magSq}} \\approx ${metrics.mag}`} block={false} />
+                <LuminousGlassKaTeX math={`|\\vec{R}| = \\sqrt{${metrics.magSq}} \\approx ${metrics.mag}`} block={false} />
               </div>
-              <span className="text-[10px] text-amber-200/70 font-mono text-center">
-                Norma euclidiana en {metrics.is2D ? 'ℝ²' : 'ℝ³'}
-              </span>
+              <div className="text-[10px] text-slate-400 font-mono text-center pt-1 border-t border-white/5">
+                Norma euclidiana en <span className="text-amber-300 font-semibold">{metrics.is2D ? 'ℝ²' : 'ℝ³'}</span>
+              </div>
             </div>
 
-            {/* 3. Vector Unitario Normalizado */}
-            <div className="p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 flex flex-col justify-between shadow-md">
-              <div className="flex items-center justify-between text-[11px] font-mono text-cyan-300 font-bold uppercase tracking-wider mb-1">
-                <span>Vector Unitario (û)</span>
-                <Compass className="w-3 h-3 text-cyan-400" />
+            {/* 3. Vector Unitario */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 hover:border-emerald-400/30 transition-all flex flex-col justify-between shadow-md">
+              <div className="flex items-center justify-between text-[11px] font-mono text-emerald-300 font-bold uppercase tracking-wider mb-1">
+                <span>Vector Unitario (û)</span>
+                <Compass className="w-3.5 h-3.5 text-emerald-400" />
               </div>
               <div className="py-1 text-center overflow-x-auto">
-                <GoldChalkKaTeX math={`\\hat{u} \\approx ${metrics.unitVec}`} block={false} />
+                <LuminousGlassKaTeX math={`\\hat{u} \\approx ${metrics.unitVec}`} block={false} />
               </div>
-              <span className="text-[10px] text-cyan-200/70 font-mono text-center">
-                Dirección pura |û| = 1
-              </span>
+              <div className="text-[10px] text-slate-400 font-mono text-center pt-1 border-t border-white/5">
+                Dirección pura (<span className="text-emerald-300 font-semibold">|û| = 1</span>)
+              </div>
             </div>
           </div>
         )}
 
-        {/* C) Ángulos Directores con los Ejes Cartesianos (si aplica) */}
+        {/* C) ÁNGULOS DIRECTORES CON LOS EJES (Píldora Glass Flotante) */}
         {metrics && metrics.mag > 0 && (
-          <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-950/50 border border-emerald-600/30 flex flex-wrap items-center justify-around gap-2 text-xs font-mono shadow-xs">
-            <span className="text-[11px] font-bold text-amber-200 flex items-center gap-1">
-              <Award className="w-3.5 h-3.5 text-amber-300" />
-              Ángulos Directores:
+          <div className="px-4 py-2 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-mono shadow-xs">
+            <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Ángulos Directores:</span>
             </span>
-            <div className="flex items-center gap-4 text-emerald-100">
-              <span><strong className="text-red-400">α (con X):</strong> {metrics.alpha}°</span>
-              <span><strong className="text-emerald-400">β (con Y):</strong> {metrics.beta}°</span>
+            <div className="flex items-center gap-4 text-slate-200">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-400" />
+                <strong>α (eje X):</strong> {metrics.alpha}°
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <strong>β (eje Y):</strong> {metrics.beta}°
+              </span>
               {!metrics.is2D && metrics.gamma !== null && (
-                <span><strong className="text-blue-400">γ (con Z):</strong> {metrics.gamma}°</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-400" />
+                  <strong>γ (eje Z):</strong> {metrics.gamma}°
+                </span>
               )}
             </div>
           </div>
         )}
 
-        {/* D) EXPLICACIÓN DIDÁCTICA (FÁCIL DE ENTENDER & CÁTEDRA) */}
-        <div className="p-3 sm:p-4 rounded-xl bg-emerald-950/90 border border-amber-400/50 shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-amber-500/30 flex-wrap gap-2">
+        {/* D) EXPLICACIÓN DIDÁCTICA GLASS CARD */}
+        <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/10 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span className="text-xs sm:text-sm font-bold text-amber-200 tracking-wide font-mono uppercase">
-                {res.explicacionFacil ? 'Explicación Sencilla (Fácil de entender)' : 'Explicación Magistral (Cátedra Harvard)'}
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span className="text-xs sm:text-sm font-bold text-white font-sans tracking-wide">
+                {res.explicacionFacil ? 'Explicación Paso a Paso' : 'Análisis Matemático Formal'}
               </span>
             </div>
             {onRepeatAudio && (
               <button
+                type="button"
                 onClick={() => {
                   soundFX.playClick();
                   onRepeatAudio(res.explicacionFacil || harvardLecture);
                 }}
-                className="px-2.5 py-0.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-all active:scale-95"
-                title="Escuchar locución completa"
+                className="px-3 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
               >
-                <Volume2 className="w-3 h-3 text-amber-300" />
-                <span>Escuchar Explicación</span>
+                <Volume2 className="w-3 h-3 text-cyan-400" />
+                <span>Escuchar</span>
               </button>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-emerald-50 leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
             {res.explicacionFacil || harvardLecture}
           </p>
         </div>
 
       </div>
 
-      {/* 4. Bandeja Inferior: Enlaces Directos y Tizas Escolares */}
-      <div className="relative z-10 pt-3 border-t-2 border-amber-500/30 flex flex-wrap items-center justify-between gap-2.5">
+      {/* 3. BARRA INFERIOR DE NAVEGACIÓN GLASS */}
+      <div className="relative z-10 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
         
-        {/* Botones de Navegación Rápida */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {onGoBackToBoard && (
             <button
+              type="button"
               onClick={() => {
                 soundFX.playClick();
                 onGoBackToBoard();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-emerald-900/70 hover:bg-emerald-800 border border-emerald-500/50 text-emerald-100 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow"
+              className="px-4 py-2 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Volver a ver el procedimiento paso a paso"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Ver Procedimiento</span>
+              <span>Ver Pasos del Cálculo</span>
             </button>
           )}
 
           {hasVectors && onGoToPlane2D && (
             <button
+              type="button"
               onClick={() => {
                 soundFX.playClick();
                 onGoToPlane2D();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 border border-cyan-400/50 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-lg animate-pulse"
+              className="px-5 py-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(6,182,212,0.35)] active:scale-95 hover:scale-[1.02]"
               title="Explorar el resultado en el Plano Cartesiano interactivo"
             >
-              <Compass className="w-3.5 h-3.5 text-cyan-200" />
-              <span>Ver en Plano Cartesiano</span>
+              <Compass className="w-4 h-4 text-slate-950" />
+              <span>Simular en Plano Cartesiano</span>
             </button>
           )}
         </div>
 
-        {/* Bandeja de Tizas de Madera Decorativa con Tiza de Oro */}
-        <div className="hidden sm:flex items-center gap-2.5 bg-[#3a1d0b] px-3.5 py-1.5 rounded-md border border-[#5c2e12] shadow-inner">
-          <div className="w-8 h-2.5 bg-amber-200 rounded-sm shadow-sm transform -rotate-2" title="Tiza de Oro" />
-          <div className="w-6 h-2 bg-slate-100 rounded-sm shadow-sm transform rotate-1" title="Tiza Blanca" />
-          <div className="w-7 h-2 bg-emerald-300 rounded-sm shadow-sm transform -rotate-1" title="Tiza Menta" />
-          <div className="w-5 h-2 bg-cyan-300 rounded-sm shadow-sm transform rotate-2" title="Tiza Neón" />
-          <div className="flex flex-col items-center justify-center bg-[#7a481c] border border-[#522f12] px-2 py-0.5 rounded shadow text-[9px] font-mono text-amber-200 font-bold" title="Borrador de pizarra">
-            <span>BORRADOR</span>
-          </div>
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[10px] font-mono text-slate-400">
+          <span>VECTRA // Glassmorphism Engine v2.0</span>
         </div>
 
       </div>
