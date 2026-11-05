@@ -39,24 +39,21 @@ export class SpeechRecognitionService {
     this.webSpeechTranscript = '';
     this.finalTranscriptCaptured = false;
 
+    // Wake Word engine
+    this.wakeWordActive = false;
+    this._wakeRec = null;
+    this._wakeRearmTimer = null;
+    this.onWakeWord = null;
+
     // Callbacks
     this.onInterimTranscript = null;
     this.onFinalTranscript = null;
     this.onError = null;
     this.onStateChange = null;
-    this.onWakeWord = null;
 
     // Config
     this.language = 'es-MX';
     this.minAudioMs = 200;
-
-    // Wake Word Engine
-    this.wakeWordRecognition = null;
-    this.wakeWordActive = false;
-    this.wakeWordArmed = true;
-    this.wakeWordRestartTimer = null;
-    this.isWakeWordMode = false;
-    this._wakeAutoStopTimer = null;
 
     this._initWebSpeech();
     this.refreshDevices();
@@ -129,6 +126,9 @@ export class SpeechRecognitionService {
       this.recognition.maxAlternatives = 2;
 
       this.recognition.onresult = (event) => {
+        // SEGURIDAD TOTAL: Si el usuario NO tiene presionada la barra espaciadora, ignorar cualquier audio
+        if (!this.isListening) return;
+
         let interim = '';
         let final = '';
 
@@ -143,7 +143,7 @@ export class SpeechRecognitionService {
         }
 
         const combined = (final + interim).trim();
-        if (combined) {
+        if (combined && this.isListening) {
           this.webSpeechTranscript = combined;
           if (this.onInterimTranscript) {
             this.onInterimTranscript(combined);
@@ -152,7 +152,7 @@ export class SpeechRecognitionService {
       };
 
       this.recognition.onerror = (event) => {
-        if (event.error === 'network' || event.error === 'no-speech') return;
+        if (event.error === 'network' || event.error === 'no-speech' || event.error === 'aborted') return;
         console.warn('[WebSpeech] Aviso:', event.error);
       };
 
@@ -167,112 +167,8 @@ export class SpeechRecognitionService {
   }
 
   // ──────────────────────────────────────────────
-  // 3. Wake Word Engine — "VECTRA" en segundo plano
+  // 3. Iniciar Grabación (Push-To-Talk Exclusivo con Espacio)
   // ──────────────────────────────────────────────
-  startWakeWordEngine() {
-    const SpeechRecognition = typeof window !== 'undefined'
-      ? (window.SpeechRecognition || window.webkitSpeechRecognition)
-      : null;
-    if (!SpeechRecognition || this.wakeWordActive) return;
-
-    this.isWakeWordMode = true;
-    this.wakeWordArmed = true;
-    this._launchWakeWordInstance();
-  }
-
-  _launchWakeWordInstance() {
-    if (!this.isWakeWordMode) return;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    try {
-      this.wakeWordRecognition = new SpeechRecognition();
-      this.wakeWordRecognition.continuous = true;
-      this.wakeWordRecognition.interimResults = true;
-      this.wakeWordRecognition.lang = this.language;
-      this.wakeWordRecognition.maxAlternatives = 3;
-
-      this.wakeWordActive = true;
-
-      this.wakeWordRecognition.onresult = (event) => {
-        if (!this.wakeWordArmed || this.isListening) return;
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          for (let a = 0; a < event.results[i].length; a++) {
-            const raw = (event.results[i][a].transcript || '').toLowerCase().trim();
-            const detected = WAKE_WORDS.some((w) => raw.includes(w));
-            if (detected) {
-              console.log(`[WakeWord] ✅ Detectado: "${raw}"`);
-              this._onWakeWordDetected();
-              return;
-            }
-          }
-        }
-      };
-
-      this.wakeWordRecognition.onerror = (event) => {
-        if (event.error === 'no-speech' || event.error === 'aborted') return;
-        this.wakeWordActive = false;
-        if (this.isWakeWordMode) {
-          clearTimeout(this.wakeWordRestartTimer);
-          this.wakeWordRestartTimer = setTimeout(() => this._launchWakeWordInstance(), 1200);
-        }
-      };
-
-      this.wakeWordRecognition.onend = () => {
-        this.wakeWordActive = false;
-        if (this.isWakeWordMode && !this.isListening) {
-          clearTimeout(this.wakeWordRestartTimer);
-          this.wakeWordRestartTimer = setTimeout(() => this._launchWakeWordInstance(), 400);
-        }
-      };
-
-      this.wakeWordRecognition.start();
-    } catch {
-      this.wakeWordActive = false;
-    }
-  }
-
-  _onWakeWordDetected() {
-    this.wakeWordArmed = false;
-    if (this.onWakeWord) this.onWakeWord();
-
-    try { this.wakeWordRecognition?.stop(); } catch {}
-    this.wakeWordActive = false;
-
-    this.start().catch(() => this._rearmWakeWord());
-
-    clearTimeout(this._wakeAutoStopTimer);
-    this._wakeAutoStopTimer = setTimeout(() => {
-      if (this.isListening) {
-        this.stop();
-      }
-    }, 7000);
-  }
-
-  _rearmWakeWord() {
-    clearTimeout(this._wakeAutoStopTimer);
-    this.wakeWordArmed = true;
-    if (this.isWakeWordMode && !this.isListening) {
-      if (!this.wakeWordActive) {
-        clearTimeout(this.wakeWordRestartTimer);
-        this.wakeWordRestartTimer = setTimeout(() => this._launchWakeWordInstance(), 500);
-      }
-    }
-  }
-
-  stopWakeWordEngine() {
-    this.isWakeWordMode = false;
-    this.wakeWordArmed = false;
-    this.wakeWordActive = false;
-    clearTimeout(this.wakeWordRestartTimer);
-    clearTimeout(this._wakeAutoStopTimer);
-    try { this.wakeWordRecognition?.stop(); } catch {}
-    this.wakeWordRecognition = null;
-  }
-
-  // ──────────────────────────────────────────────
-  // 4. Iniciar Grabación (Sensibilidad Total)
   // ──────────────────────────────────────────────
   async start() {
     if (this.isListening) return;
@@ -449,10 +345,10 @@ export class SpeechRecognitionService {
     this.isListening = false;
     this._stopAudioMeter();
 
-    // Detener Web Speech API amablemente (NO abortar) para que emita sus resultados finales
+    // Abortar inmediatamente Web Speech para evitar que escuche los altavoces de la laptop
     if (this.recognition) {
       try {
-        this.recognition.stop();
+        this.recognition.abort();
       } catch {}
     }
 
@@ -471,10 +367,6 @@ export class SpeechRecognitionService {
     }
 
     if (this.onStateChange) this.onStateChange(false);
-
-    if (this.isWakeWordMode) {
-      this._rearmWakeWord();
-    }
   }
 
   async _finalizeStop() {
@@ -548,6 +440,103 @@ export class SpeechRecognitionService {
       'audio/mp4'
     ];
     return candidates.find((t) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  // ──────────────────────────────────────────────
+  // WAKE WORD ENGINE — Modo Clase: "Di VECTRA para activarme"
+  // ──────────────────────────────────────────────
+
+  startWakeWordEngine() {
+    if (this.wakeWordActive) return;
+    this.wakeWordActive = true;
+    this.onWakeWord = this.onWakeWord || null;
+    console.log('[WakeWord] Motor de palabra de activación iniciado — Di "VECTRA" para hablar.');
+    this._launchWakeWordInstance();
+  }
+
+  _launchWakeWordInstance() {
+    if (!this.wakeWordActive) return;
+    const SpeechRecognition = typeof window !== 'undefined'
+      ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+      : null;
+    if (!SpeechRecognition) {
+      console.warn('[WakeWord] Web Speech API no disponible en este navegador.');
+      return;
+    }
+
+    const wakeRec = new SpeechRecognition();
+    this._wakeRec = wakeRec;
+    wakeRec.continuous = false;
+    wakeRec.interimResults = false;
+    wakeRec.lang = this.language;
+    wakeRec.maxAlternatives = 3;
+
+    wakeRec.onresult = (event) => {
+      if (!this.wakeWordActive) return;
+      for (let i = 0; i < event.results.length; i++) {
+        for (let j = 0; j < event.results[i].length; j++) {
+          const heard = (event.results[i][j].transcript || '').toLowerCase().trim();
+          const matched = WAKE_WORDS.some((w) => heard.includes(w));
+          if (matched) {
+            console.log(`[WakeWord] ✅ Detectado: "${heard}" — activando micrófono...`);
+            if (this.onWakeWord) this.onWakeWord();
+            // Iniciar grabación PTT automáticamente por 5 segundos
+            this.start().then(() => {
+              setTimeout(() => {
+                if (this.isListening) this.stop();
+              }, 5000);
+            }).catch(() => {});
+            return;
+          }
+        }
+      }
+      this._rearmWakeWord();
+    };
+
+    wakeRec.onerror = (e) => {
+      if (e.error === 'aborted' || e.error === 'no-speech') {
+        this._rearmWakeWord();
+        return;
+      }
+      console.warn('[WakeWord] Error:', e.error);
+      this._rearmWakeWord();
+    };
+
+    wakeRec.onend = () => {
+      this._rearmWakeWord();
+    };
+
+    try {
+      wakeRec.start();
+    } catch (err) {
+      console.warn('[WakeWord] No se pudo arrancar:', err.message);
+      setTimeout(() => this._rearmWakeWord(), 1500);
+    }
+  }
+
+  _rearmWakeWord() {
+    if (!this.wakeWordActive) return;
+    // No rearmar si ya estamos grabando activamente
+    if (this.isListening) {
+      setTimeout(() => this._rearmWakeWord(), 1000);
+      return;
+    }
+    clearTimeout(this._wakeRearmTimer);
+    this._wakeRearmTimer = setTimeout(() => {
+      if (this.wakeWordActive && !this.isListening) {
+        this._launchWakeWordInstance();
+      }
+    }, 400);
+  }
+
+  stopWakeWordEngine() {
+    this.wakeWordActive = false;
+    clearTimeout(this._wakeRearmTimer);
+    if (this._wakeRec) {
+      try { this._wakeRec.abort(); } catch {}
+      this._wakeRec = null;
+    }
+    console.log('[WakeWord] Motor de palabra de activación detenido.');
   }
 
   toggle() {

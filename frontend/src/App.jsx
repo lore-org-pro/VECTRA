@@ -665,37 +665,9 @@ export default function App() {
         /* ========================================================
            A) MODO SOLAMENTE LA CARA (FONDO BLANCO PURO) + HUD CONVERSACIONAL
            ======================================================== */
-        <main 
-          onMouseDown={(e) => {
-            if (e.target.closest('button, input, textarea, a')) return;
-            if (!isMicMutedRef.current) {
-              audioPlayer.stop();
-              soundFX.playClick();
-              speechService.start();
-              setSystemState('escuchando');
-            }
-          }}
-          onMouseUp={(e) => {
-            if (e.target.closest('button, input, textarea, a')) return;
-            setSystemState('pensando');
-            speechService.stop();
-          }}
-          onTouchStart={(e) => {
-            if (e.target.closest('button, input, textarea, a')) return;
-            if (!isMicMutedRef.current) {
-              audioPlayer.stop();
-              soundFX.playClick();
-              speechService.start();
-              setSystemState('escuchando');
-            }
-          }}
-          onTouchEnd={(e) => {
-            if (e.target.closest('button, input, textarea, a')) return;
-            setSystemState('pensando');
-            speechService.stop();
-          }}
-          className="flex-1 w-full h-full flex flex-col items-center justify-between p-3 sm:p-5 relative bg-white select-none overflow-hidden cursor-pointer"
-          title="Mantén presionada la barra espaciadora o haz clic sostenido en el fondo para hablar"
+        <main
+          className="flex-1 w-full h-full flex flex-col items-center justify-between p-3 sm:p-5 relative bg-white select-none overflow-hidden"
+          title="Mantén presionada la barra espaciadora [ESPACIO] para hablar"
         >
           {/* 1. Header superior discreto con pregunta del usuario o badge de estado */}
           <div className="w-full max-w-3xl flex flex-col items-center gap-1.5 z-10 shrink-0 pointer-events-auto">

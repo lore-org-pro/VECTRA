@@ -123,20 +123,21 @@ export default function ControlBar({
               <ShieldCheck className="w-2.5 h-2.5 text-cyan-600" />
               ANTIRRUIDO AULA
             </span>
-            {/* Botón Modo Clase (Wake Word "VECTRA") */}
+            {/* Botón MODO CLASE — Wake Word "VECTRA" para manos libres */}
             {onToggleWakeWord && (
               <button
                 type="button"
-                onClick={onToggleWakeWord}
-                className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border cursor-pointer transition-all active:scale-95 ${
+                tabIndex="-1"
+                onClick={(e) => { e.preventDefault(); if (onToggleWakeWord) onToggleWakeWord(); }}
+                className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
                   isWakeWordMode
-                    ? 'bg-violet-600 text-white border-violet-700 shadow-sm shadow-violet-300/60 animate-pulse'
-                    : 'bg-violet-50 text-violet-800 border-violet-300 hover:bg-violet-100'
-                } ${wakeWordPulse ? 'scale-110 shadow-md shadow-violet-400/80' : ''}`}
-                title={isWakeWordMode ? 'Desactivar Modo Clase (Wake Word "VECTRA")' : 'Activar Modo Clase — Di "VECTRA" para hablar sin tocar nada'}
+                    ? 'bg-violet-600 text-white border-violet-700 shadow-sm shadow-violet-400/40 animate-pulse'
+                    : 'bg-violet-100 text-violet-800 border-violet-300 hover:bg-violet-200'
+                } ${wakeWordPulse ? 'scale-110' : ''}`}
+                title={isWakeWordMode ? 'Modo Clase activo — Di «VECTRA» para hablar. Clic para desactivar.' : 'Activar Modo Clase — Di «VECTRA» sin tocar nada'}
               >
                 <School className="w-2.5 h-2.5" />
-                {isWakeWordMode ? 'MODO CLASE ●' : 'MODO CLASE'}
+                MODO CLASE
               </button>
             )}
             {/* Selector de micrófono si hay más de 1 conectado */}
