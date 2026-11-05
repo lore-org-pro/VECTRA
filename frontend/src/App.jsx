@@ -577,12 +577,19 @@ export default function App() {
   }, [handleReturnToFace]);
 
   // Desbloqueo inicial silencioso con la primera interacción del usuario
+  // Al primer clic o tecla, también arrancamos el motor Wake Word en modo siempre activo
   useEffect(() => {
     const handleFirstInteraction = () => {
       if (!isStarted) {
         setIsStarted(true);
         soundFX.init();
         audioPlayer.init();
+        // MODO FERIA: Wake Word siempre activo desde el primer momento
+        // Detecta "VECTRA" en el ambiente y activa el mic automáticamente
+        try {
+          speechService.startWakeWordEngine();
+          setIsWakeWordMode(true);
+        } catch {}
       }
     };
 
@@ -1029,9 +1036,6 @@ export default function App() {
           micLabel={micLabel}
           availableMics={availableMics}
           onSwitchMic={handleSwitchMic}
-          isWakeWordMode={isWakeWordMode}
-          onToggleWakeWord={handleToggleWakeWord}
-          wakeWordPulse={wakeWordPulse}
         />
       </footer>
 

@@ -1,14 +1,53 @@
 // ========================================================
-// VECTRA // FRONTEND HTTP CLIENT (CON MOTOR LOCAL OFFLINE RESILIENTE)
+// VECTRA // FRONTEND HTTP CLIENT — MODO FERIA (OFFLINE FIRST)
+// En feria sin internet: motor local responde SIEMPRE instantáneo.
+// Si hay conexión (servidor local o internet), la usa como mejora.
 // ========================================================
 import { localMathSolver } from './localMathSolver.js';
 
 const API_BASE = '/api';
 
+// Detectar si hay servidor local o conexión (rápido, 800ms timeout)
+let _serverAvailable = null; // null = no chequeado, true/false = resultado
+let _lastCheck = 0;
+
+async function _checkServerAvailable() {
+  const now = Date.now();
+  // Re-chequear solo cada 30 segundos para no saturar
+  if (_serverAvailable !== null && now - _lastCheck < 30000) return _serverAvailable;
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 800);
+    const res = await fetch(`${API_BASE}/health`, { signal: ctrl.signal });
+    _serverAvailable = res.ok;
+  } catch {
+    _serverAvailable = false;
+  }
+  _lastCheck = now;
+  return _serverAvailable;
+}
+
 export async function askVectra(message, history = [], forcedProviderId = null) {
+  // 1. INTENTAR MOTOR LOCAL PRIMERO (siempre disponible, sin internet)
+  const local = localMathSolver.solve(message);
+
+  // Si el motor local resolvió con confianza (matemáticas o temas de la feria), retornar ya
+  if (local && local._meta?.offline === true) {
+    return local;
+  }
+
+  // 2. Si la consulta es conversacional y no hay servidor, usar local como fallback fluido
+  const serverUp = await _checkServerAvailable();
+  if (!serverUp) {
+    if (local) return local;
+    // Generar respuesta local conversacional enriquecida
+    return localMathSolver.solveConversational(message);
+  }
+
+  // 3. Servidor disponible: llamar al backend con timeout corto
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6500); // 6.5s timeout max
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
 
     const response = await fetch(`${API_BASE}/chat`, {
       method: 'POST',
@@ -22,17 +61,11 @@ export async function askVectra(message, history = [], forcedProviderId = null) 
       return await response.json();
     }
 
-    // Si la API remota devuelve error (429 rate limit, 500, etc.), recurrir al motor local
-    console.warn(`[VECTRA] API devolvió HTTP ${response.status}. Activando motor local offline...`);
-    const local = localMathSolver.solve(message);
-    if (local) return local;
-
-    throw new Error(`HTTP error ${response.status}`);
+    console.warn(`[VECTRA] API devolvió HTTP ${response.status}. Usando motor local...`);
+    return local || localMathSolver.solveConversational(message);
   } catch (err) {
-    console.warn('[VECTRA] Modo local offline activado por falla de red/API:', err.message);
-    const local = localMathSolver.solve(message);
-    if (local) return local;
-    throw err;
+    console.warn('[VECTRA] Sin red — modo local offline activo:', err.message);
+    return local || localMathSolver.solveConversational(message);
   }
 }
 
