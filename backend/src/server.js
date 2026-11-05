@@ -154,8 +154,8 @@ app.post('/api/transcribe', async (req, res) => {
     formData.append('model', 'whisper-large-v3-turbo');
     formData.append('language', 'es');
     formData.append('temperature', '0.0');
-    // Prompt acústico guía para filtrar ruido de aula escolar, murmullos y ecos
-    formData.append('prompt', 'VECTRA, asistente de matemáticas y vectores en aula con ruido de fondo. Transcribe únicamente la voz principal ignorando murmullos de alumnos y ruido ambiental. Operaciones: suma, resta, producto punto, cruz, magnitud, coordenadas, calcular, explicar.');
+    // Prompt acústico guía para aislar la voz cercana e ignorar vocerío y murmullos del aula
+    formData.append('prompt', 'Voz principal en primer plano hablando de matemáticas y vectores en español en aula escolar ruidosa. IGNORAR COMPLETAMENTE voces secundarias de fondo, risas, gritos, murmullos y conversaciones lejanas de otros estudiantes. Transcribir únicamente lo que dice el orador cercano: vector A, vector B, coordenadas, suma, resta, producto punto, producto cruz, calcular, plano cartesiano, tipos de vectores.');
 
     const startTime = Date.now();
     const groqResponse = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {

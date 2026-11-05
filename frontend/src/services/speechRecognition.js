@@ -285,12 +285,13 @@ export class SpeechRecognitionService {
 
     if (this.onStateChange) this.onStateChange(true);
 
-    // Constraints universales y tolerantes (nunca fallan con OverconstrainedError)
+    // Constraints con supresión de ruido activa y SIN AGC descontrolado
+    // (autoGainControl: false evita que el micro amplifique el vocerío del aula durante las pausas)
     const constraints = {
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
-        autoGainControl: true,
+        autoGainControl: false,
         ...(this.selectedDeviceId ? { deviceId: { ideal: this.selectedDeviceId } } : {})
       }
     };
@@ -324,20 +325,20 @@ export class SpeechRecognitionService {
       this.activeDeviceLabel = track.label;
     }
 
-    // Iniciar medidor de audio VU (sin mutear nada)
-    this._startAudioMeter();
+    // Iniciar filtro de aislamiento vocal y medidor de audio VU
+    const recordStream = this._startAudioMeter() || this.stream;
 
-    // Iniciar Web Speech API para reconocimiento instantáneo
+    // Iniciar Web Speech API para subtítulos en vivo durante la pulsación
     if (this.recognition) {
       try {
         this.recognition.start();
       } catch {}
     }
 
-    // MediaRecorder de audio limpio para Whisper como respaldo
+    // MediaRecorder de audio filtrado para Whisper (aislador de vocerío escolar)
     const mimeType = this._chooseMimeType();
     try {
-      this.mediaRecorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : {});
+      this.mediaRecorder = new MediaRecorder(recordStream, mimeType ? { mimeType } : {});
     } catch {
       this.mediaRecorder = new MediaRecorder(this.stream);
     }
@@ -354,12 +355,12 @@ export class SpeechRecognitionService {
   }
 
   // ──────────────────────────────────────────────
-  // 5. Medidor VU de Audio (Sensible y No Destructivo)
+  // 5. Cadena DSP de Aislamiento Vocal y Medidor VU
   // ──────────────────────────────────────────────
   _startAudioMeter() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx || !this.stream) return;
+      if (!AudioCtx || !this.stream) return this.stream;
 
       this.audioCtx = new AudioCtx();
       if (this.audioCtx.state === 'suspended') {
@@ -367,12 +368,39 @@ export class SpeechRecognitionService {
       }
 
       const source = this.audioCtx.createMediaStreamSource(this.stream);
+
+      // FILTRO PASO ALTO 130 Hz: Corta retumbos graves de sala, ruidos de mesa y pisadas
+      const highpass = this.audioCtx.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 130;
+
+      // FILTRO PASO BAJO 4600 Hz: Corta chillidos lejanos y ruidos de fondo de alta frecuencia
+      const lowpass = this.audioCtx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 4600;
+
+      // REALCE DE PRESENCIA VOCAL EN 2200 Hz (+4 dB): Prioriza la voz cercana al micro
+      const presence = this.audioCtx.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = 2200;
+      presence.Q.value = 1.0;
+      presence.gain.value = 4.0;
+
       this.analyser = this.audioCtx.createAnalyser();
       this.analyser.fftSize = 256;
       this.analyser.smoothingTimeConstant = 0.3;
 
-      // El analizador SOLO recibe audio para medirlo visualmente, NO modifica la grabación
-      source.connect(this.analyser);
+      source.connect(highpass);
+      highpass.connect(lowpass);
+      lowpass.connect(presence);
+      presence.connect(this.analyser);
+
+      let recordStream = this.stream;
+      if (this.audioCtx.createMediaStreamDestination) {
+        const dest = this.audioCtx.createMediaStreamDestination();
+        presence.connect(dest);
+        recordStream = dest.stream;
+      }
 
       const buffer = new Uint8Array(this.analyser.frequencyBinCount);
 
@@ -392,8 +420,10 @@ export class SpeechRecognitionService {
       };
 
       this.animFrameId = requestAnimationFrame(checkVolume);
+      return recordStream;
     } catch (err) {
       console.warn('[SpeechRec] Error en medidor VU:', err.message);
+      return this.stream;
     }
   }
 
@@ -453,32 +483,19 @@ export class SpeechRecognitionService {
       this.stream = null;
     }
 
-    // Pequeño margen (200ms) para que Web Speech API entregue los últimos fonemas tras el stop()
-    if (!this.webSpeechTranscript) {
-      await new Promise((r) => setTimeout(r, 200));
-    }
-
-    // 1. FAST-PATH: Si Web Speech API ya reconoció texto, usarlo de inmediato sin esperar a la red
-    const wsText = (this.webSpeechTranscript || '').trim();
-    if (wsText.length >= 2) {
-      console.log(`[SpeechRec] ⚡ Reconocimiento Instantáneo (Web Speech): "${wsText}"`);
-      this.finalTranscriptCaptured = true;
-      if (this.onFinalTranscript) {
-        this.onFinalTranscript(wsText);
-      }
-      return;
-    }
-
-    // 2. BACKUP-PATH: Si Web Speech no capturó texto, procesar con Whisper
-    this._processWithWhisper();
+    // PRIORIDAD AL MOTOR NEURONAL WHISPER EN AULAS RUIDOSAS CON VOCERÍO:
+    // Whisper analiza el espectrograma completo y discrimina las voces lejanas.
+    // Web Speech API se usa únicamente como respaldo si Whisper no responde.
+    await this._processWithWhisper();
   }
 
   async _processWithWhisper() {
     const elapsed = Date.now() - this.startTime;
+    const wsFallback = (this.webSpeechTranscript || '').trim();
+
     if (this.audioChunks.length === 0 || elapsed < this.minAudioMs) {
-      const fallback = (this.webSpeechTranscript || '').trim();
-      if (fallback && this.onFinalTranscript) {
-        this.onFinalTranscript(fallback);
+      if (wsFallback && this.onFinalTranscript) {
+        this.onFinalTranscript(wsFallback);
       } else if (this.onError) {
         this.onError('empty_transcript');
       }
@@ -496,28 +513,27 @@ export class SpeechRecognitionService {
           'Content-Type': mimeType
         },
         body: arrayBuffer,
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(9000)
       });
 
       const data = await response.json().catch(() => ({ text: '' }));
       const text = (data.text || '').trim();
 
       if (text) {
-        console.log(`[SpeechRec] ✅ Whisper: "${text}"`);
+        console.log(`[SpeechRec] ✅ Whisper (Voz aislada sin vocerío): "${text}"`);
+        this.finalTranscriptCaptured = true;
         if (this.onFinalTranscript) this.onFinalTranscript(text);
-      } else {
-        const fallback = (this.webSpeechTranscript || '').trim();
-        if (fallback && this.onFinalTranscript) {
-          this.onFinalTranscript(fallback);
-        } else if (this.onError) {
-          this.onError('empty_transcript');
-        }
+      } else if (wsFallback) {
+        console.log(`[SpeechRec] ⚠️ Respaldo Web Speech: "${wsFallback}"`);
+        this.finalTranscriptCaptured = true;
+        if (this.onFinalTranscript) this.onFinalTranscript(wsFallback);
+      } else if (this.onError) {
+        this.onError('empty_transcript');
       }
     } catch (err) {
-      console.warn('[SpeechRec] Whisper no disponible:', err.message);
-      const fallback = (this.webSpeechTranscript || '').trim();
-      if (fallback && this.onFinalTranscript) {
-        this.onFinalTranscript(fallback);
+      console.warn('[SpeechRec] Whisper no disponible por red, usando Web Speech:', err.message);
+      if (wsFallback && this.onFinalTranscript) {
+        this.onFinalTranscript(wsFallback);
       } else if (this.onError) {
         this.onError('empty_transcript');
       }

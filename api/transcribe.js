@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     formData.append('model', 'whisper-large-v3-turbo');
     formData.append('language', 'es');
     formData.append('temperature', '0.0');
-    formData.append('prompt', 'VECTRA, asistente de matemáticas y vectores en aula escolar con ruido. Transcribe únicamente la voz principal en español: suma, resta, producto punto, cruz, magnitud, coordenadas, calcular, explicar.');
+    formData.append('prompt', 'Voz principal en primer plano hablando de matemáticas y vectores en español en aula escolar ruidosa. IGNORAR COMPLETAMENTE voces secundarias de fondo, risas, gritos, murmullos y conversaciones lejanas de otros estudiantes. Transcribir únicamente lo que dice el orador cercano: vector A, vector B, coordenadas, suma, resta, producto punto, producto cruz, calcular, plano cartesiano, tipos de vectores.');
 
     const startTime = Date.now();
     const groqResponse = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
